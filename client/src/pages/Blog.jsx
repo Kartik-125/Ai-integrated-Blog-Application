@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom'
 import { assets, blog_data, comments_data } from '../assets/assets'
 import Navbar from '../components/Navbar'
 import moment from 'moment'
+import Footer from '../components/Footer'
+import Loader from '../components/Loader'
 
 const Blog = () => {
   const { id } = useParams()
@@ -82,17 +84,30 @@ const Blog = () => {
         <div className='max-w-3xl mx-auto'>
           <p className='font-semibold mb-4'>Add your Comment</p>
           <form onSubmit={addComment} className='flex flex-col items-start gap-4 max-w-lg'>
+
             <input onChange={(e)=> setName(e.target.value)} value={name} type="text" placeholder='Name' required  className='w-full p-2 border border-gray-300 rounded outline-none'/>
 
-            <textarea placeholder='Comment' className='w-full p-2 border border-gray-300 rounded outline-none h-48'></textarea>
+            <textarea onChange={(e)=> setContent(e.target.value)} value={content} placeholder='Content' className='w-full p-2 border border-gray-300 rounded outline-none h-48'></textarea>
 
             <button type='submit' className='bg-primary text-white rounded p-2 px-8 hover:scale-102 transition-all cursor-pointer'>Submit</button>
+
           </form>
         </div>
+
+        {/* { Share Buttons} */}
+        <div className='my-24 max-w-3xl mx-auto'>
+          <p className='font-semibold my-4'>Share this article on social media</p>
+          <div className='flex'>
+            <img src={assets.facebook_icon} width={50} alt="" />
+            <img src={assets.twitter_icon} width={50} alt="" />
+            <img src={assets.googleplus_icon} width={50} alt="" />
+          </div>
+        </div>
       </div>
+      <Footer/>
 
     </div>
-  ) : <div>Loading...</div>
+  ) : <Loader />
 }
-
+// 1:49:00
 export default Blog
