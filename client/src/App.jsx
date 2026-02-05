@@ -12,6 +12,9 @@ import Comments from './pages/admin/Comments'
 import ListBlog from './pages/admin/ListBlog'
 import Login from './components/admin/Login'
 
+// Rich text format
+import 'quill/dist/quill.snow.css'
+
 const App = () => {
   return (
     <Routes>
