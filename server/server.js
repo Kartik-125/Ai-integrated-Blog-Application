@@ -4,6 +4,8 @@ import cors from 'cors'
 import connectDB from './configs/db.js';
 import adminRouter from './routes/adminRoutes.js';
 
+
+
 const app = express();
 
 await connectDB()
