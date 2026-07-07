@@ -1,16 +1,38 @@
-import express from "express";
-import { addBlog } from "../controllers/blogController.js";
-import upload from "../middleware/multer.js";
-import auth from "../middleware/auth.js";
+    import express from "express";
+    import { addBlog, deleteBlogById, getAllBlogs, getBlogById, togglePublish } from "../controllers/blogController.js";
+    import upload from "../middleware/multer.js";
+    import auth from "../middleware/auth.js";
 
-const blogRouter = express.Router();
+    const blogRouter = express.Router();
 
-blogRouter.post(
-    "/add",
-     upload.single("image"), 
-     auth, 
-     addBlog
+    blogRouter.post(
+        "/add",
+        upload.single("image"), 
+        auth, 
+        addBlog
     );
 
-export default blogRouter;
+    blogRouter.get(
+        "/all",
+        getAllBlogs
+    );
+
+    blogRouter.get(
+        "/:blogId",
+        getBlogById
+    );
+
+    blogRouter.post(
+        "/delete",
+        auth,
+        deleteBlogById
+    );
+
+    blogRouter.post(
+        "/toggle-publish",
+        auth,
+        togglePublish
+    );
+
+    export default blogRouter;
 
