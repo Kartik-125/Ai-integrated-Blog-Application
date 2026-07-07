@@ -4,40 +4,54 @@ import Blog from '../models/Blog.js'
 
 export const addBlog = async (req, res)=>{
     try{
-        const {title, subTitle, description, category, isPublished} = JSON.parse(req.body.blog);
+        const {title, subTitle, description, category, isPublished} = 
+            JSON.parse(req.body.blog);
+        
+
         const imageFile = req.file;
 
+
         if(!title || !description || !category || !imageFile){
-            return res.json({success: false, message: "missing required fields"})
+            return res.json({
+                success: false, 
+                message: "missing required fields"
+            });
         }
 
+        //Read Uploaded file
         const fileBuffer = fs.readFileSync(imageFile.path)
 
-        // upload image ot image kit
+        // upload image to image kit
         const response = await imagekit.upload({
             file: fileBuffer,
             fileName: imageFile.originalname,
             folder: "/blogs"
-        })
+        });
+        const image = response.url;
 
-        // optimize the image
-        const optimizeImageUrl = imagekit.url({
-            path: response.filePath,
-            transformation: [
-                {quality: 'auto'}, //auto compression
-                {format: 'webp'}, // convert to modern format
-                {width: '1280'}  // width resizing
-            ]
-        }) ;
+        // Delete temporary file
+        fs.unlinkSync(imageFile.path);
 
-        const image =  optimizeImageUrl;
+        //Save the blog in MongoDB
+        await Blog.create({
+            title, 
+            subTitle, 
+            description, 
+            category, 
+            image, 
+            isPublished
+        });
 
-        await Blog.create({title, subTitle, description, category, image, isPublished})
-
-        res.json({success:true, message: "Blog added successfully"})
+        res.json({
+            success:true, 
+            message: "Blog added successfully"
+        });
         
     } catch(error) {
-        res.json({success:false, message: error.message})
+        res.json({
+            success:false, 
+            message: error.message
+        });
 
     }
-}
+};
