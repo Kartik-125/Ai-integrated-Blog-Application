@@ -5,9 +5,9 @@ const auth = (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
-      return res.json({
+      return res.status(401).json({
         success: false,
-        message: "No Token Provided",
+        message: "Authorization token missing",
       });
     }
 
@@ -17,9 +17,9 @@ const auth = (req, res, next) => {
 
     next();
   } catch (error) {
-    return res.json({
+    return res.status(401).json({
       success: false,
-      message: "Invalid Token",
+      message: "Invalid or expired Token",
     });
   }
 };
