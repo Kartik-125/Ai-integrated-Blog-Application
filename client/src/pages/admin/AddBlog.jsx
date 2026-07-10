@@ -1,10 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react'
-import {assets, blogCategories} from '../../assets/assets'
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import { useAppContext } from "../../context/AppContext.jsx";
+import {assets, blogCategories} from '../../assets/assets.js'
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css'
 
 
 const addBlog = () => {
+
+  const navigate = useNavigate();
+
+  const { axios, token } = useAppContext();
 
   const editorRef = useRef(null)
   const quillRef = useRef(null)
@@ -16,8 +23,58 @@ const addBlog = () => {
   const [isPublished,setIsPublished]= useState(false);
 
   const onSubmitHandler = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
+
+  try {
+    const description = quillRef.current.root.innerHTML;
+
+    const formData = new FormData();
+
+    formData.append("image", image);
+
+    formData.append(
+      "blog",
+      JSON.stringify({
+        title,
+        subTitle,
+        description,
+        category,
+        isPublished,
+      })
+    );
+
+    const { data } = await axios.post(
+      "/blog/add",
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+
+    if (data.success) {
+      toast.success(data.message);
+
+      setImage(false);
+      setTitle("");
+      setSubTitle("");
+      setCategory("Startup");
+      setIsPublished(false);
+
+      quillRef.current.setText("");
+
+      navigate("/admin/listblog");
+    } else {
+      toast.error(data.message);
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to add blog");
   }
+  
+};
 
   useEffect(()=>{
     if(!quillRef.current && editorRef.current)
@@ -27,8 +84,6 @@ const addBlog = () => {
   },[])
   const generateContent  = async (e)=>{
   }
-
-
 
   return (
     <form onSubmit={onSubmitHandler} className='flex-1 bg-blue-50/50 text-gray-600 h-full overflow-auto'>

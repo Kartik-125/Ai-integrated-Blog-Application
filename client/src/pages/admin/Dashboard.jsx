@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react'
-import { assets, dashboard_data } from '../../assets/assets'
-import BlogTableItem from '../../components/admin/BlogTableItem'
+import { assets} from '../../assets/assets.js'
+import BlogTableItem from '../../components/admin/BlogTableItem.jsx'
+import { useAppContext } from "../../context/AppContext.jsx";
+import toast from "react-hot-toast";
 
 const Dashboard = () => {
 
+  const { axios, token } = useAppContext();
 
   const [dashboardData,setDashboardData] = useState({
     blogs: 0,
@@ -13,9 +16,24 @@ const Dashboard = () => {
   })
 
 
-  const fetchDashboard = async ()=>{
-    setDashboardData(dashboard_data)
+  const fetchDashboard = async () => {
+  try {
+    const { data } = await axios.get("/admin/dashboard", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (data.success) {
+      setDashboardData(data.dashboardData);
+    } else {
+      toast.error(data.message);
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to load dashboard");
   }
+};
 
   useEffect(()=>{
     fetchDashboard()
