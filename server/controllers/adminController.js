@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
 import Blog from '../models/Blog.js';
 import Comment from '../models/Comment.js';
+import mongoose from 'mongoose';
 
 
 // admin login

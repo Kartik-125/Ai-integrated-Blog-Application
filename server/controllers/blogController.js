@@ -2,6 +2,7 @@ import fs from 'fs'
 import imagekit from '../configs/imageKit.js';
 import Blog from '../models/Blog.js'
 import Comment from '../models/Comment.js';
+import mongoose from 'mongoose';
 
 
 //add blogs
