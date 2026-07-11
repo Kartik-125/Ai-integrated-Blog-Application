@@ -9,14 +9,14 @@ import mongoose from 'mongoose';
 export const addBlog = async (req, res)=>{
     try{
         
-        const {title, subTitle, description, category, isPublished} = 
+        const {title, subTitle, author, description, category, isPublished} = 
             JSON.parse(req.body.blog);
         
 
         const imageFile = req.file;
 
 
-        if(!title || !description || !category || !imageFile){
+        if(!title || !author || !description || !category || !imageFile){
             return res.json({
                 success: false, 
                 message: "missing required fields"
@@ -44,6 +44,7 @@ export const addBlog = async (req, res)=>{
         const blog = await Blog.create({
             title, 
             subTitle, 
+            author,
             description, 
             category, 
             image, 
@@ -99,7 +100,10 @@ export const getBlogById = async(req,res) =>{
         );
 }
 
-        const blog = await Blog.findById(blogId)
+        const blog = await Blog.findOne({
+            _id: blogId,
+            isPublished: true
+        })
         
         if(!blog){
             return res.json({

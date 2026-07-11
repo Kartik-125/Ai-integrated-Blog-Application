@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { assets, blog_data, comments_data } from '../assets/assets'
+import { assets} from '../assets/assets'
+import { useAppContext } from '../context/AppContext'
+import toast from 'react-hot-toast'
 import Navbar from '../components/Navbar'
 import moment from 'moment'
 import Footer from '../components/Footer'
 import Loader from '../components/Loader'
 
 const Blog = () => {
+  
   const { id } = useParams()
+  const { axios } = useAppContext()
 
   const [data, setData] = useState(null)
   const [comments, setComments] = useState([])
@@ -17,19 +21,61 @@ const Blog = () => {
 
 
   const fetchBlogData = async () => {
-    const data = blog_data.find(item => item._id === id)
-    setData(data)
+  try {
+    const { data } = await axios.get(`/blog/${id}`)
+
+    if (data.success) {
+      setData(data.blog)
+    } else {
+      toast.error(data.message)
+    }
+  } catch (error) {
+    console.error(error)
+    toast.error("Failed to load blog")
   }
+}
 
-  const fetchComments = async () =>{
-    setComments(comments_data)
+  const fetchComments = async () => {
+  try {
+    const { data } = await axios.post("/blog/comments", {
+      blogId: id
+    })
+
+    if (data.success) {
+      setComments(data.comments)
+    } else {
+      toast.error(data.message)
+    }
+  } catch (error) {
+    console.error(error)
+    toast.error("Failed to load comments")
   }
+}
 
 
-  const addComment = async ()=>{
-    e.preventDefault();
+  const addComment = async (e) => {
+  e.preventDefault()
+
+  try {
+    const { data } = await axios.post("/blog/add-comment", {
+      blog: id,
+      name,
+      content
+    })
+
+    if (data.success) {
+      toast.success(data.message)
+
+      setName("")
+      setContent("")
+    } else {
+      toast.error(data.message)
+    }
+  } catch (error) {
+    console.error(error)
+    toast.error("Failed to add comment")
   }
-
+}
   useEffect(() => {
     fetchBlogData()
     fetchComments()
@@ -51,7 +97,7 @@ const Blog = () => {
 
         <h2 className='my-5 max-w-lg truncate mx-auto'>{data.subTitle}</h2>
 
-        <p className='inline-block py-1 px-4 rounded-full mb-6 border text-sm border-primary/35 bg-primary/5 font-medium text-primary'>Miachle Brown</p>
+        <p className='inline-block py-1 px-4 rounded-full mb-6 border text-sm border-primary/35 bg-primary/5 font-medium text-primary'> {data.author} </p>
 
       </div>
 
@@ -65,8 +111,8 @@ const Blog = () => {
         <div className='mt-14 mb-10 max-w-3xl mx-auto'>
           <p className='font-semibold mb-4'>Comments ({comments.length})</p>
           <div className='flex flex-col gap-4'>
-            {comments.map((item, index) => (
-              <div key={index} className='relative bg-primary/2 border border-primary/5 max-w-xl p-4 rounded text-gray-600'>
+            {comments.map((item) => (
+              <div key={item._id} className='relative bg-primary/2 border border-primary/5 max-w-xl p-4 rounded text-gray-600'>
                 <div className='flex items-center gap-2 mb-2'>
                   <img src={assets.user_icon} className='w-6' alt="" />
                   <p className='font-medium'>{item.name}</p>
@@ -87,7 +133,7 @@ const Blog = () => {
 
             <input onChange={(e)=> setName(e.target.value)} value={name} type="text" placeholder='Name' required  className='w-full p-2 border border-gray-300 rounded outline-none'/>
 
-            <textarea onChange={(e)=> setContent(e.target.value)} value={content} placeholder='Content' className='w-full p-2 border border-gray-300 rounded outline-none h-48'></textarea>
+            <textarea onChange={(e)=> setContent(e.target.value)} value={content} placeholder='Content' required className='w-full p-2 border border-gray-300 rounded outline-none h-48'></textarea>
 
             <button type='submit' className='bg-primary text-white rounded p-2 px-8 hover:scale-102 transition-all cursor-pointer'>Submit</button>
 

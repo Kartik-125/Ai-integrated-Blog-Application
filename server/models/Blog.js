@@ -11,6 +11,11 @@ const blogSchema = new mongoose.Schema(
             type: String,
             trim: true
         },
+        author: {
+            type:String,
+            required: true,
+            trim: true
+        },
         description: {
             type: String, 
             required: true

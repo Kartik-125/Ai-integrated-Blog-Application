@@ -19,6 +19,7 @@ const addBlog = () => {
   const [image,setImage]= useState(false);
   const [title,setTitle]= useState('');
   const [subTitle,setSubTitle]= useState('');
+  const [author, setAuthor] = useState('');
   const [category,setCategory]= useState('Startup');
   const [isPublished,setIsPublished]= useState(false);
 
@@ -37,6 +38,7 @@ const addBlog = () => {
       JSON.stringify({
         title,
         subTitle,
+        author,
         description,
         category,
         isPublished,
@@ -60,6 +62,7 @@ const addBlog = () => {
       setImage(false);
       setTitle("");
       setSubTitle("");
+      setAuthor("");
       setCategory("Startup");
       setIsPublished(false);
 
@@ -91,24 +94,67 @@ const addBlog = () => {
 
         <p>Upload Thumbnail</p>
         <label htmlFor="image">
-          <img src={!image ? assets.upload_area : URL.createObjectURL(image)} alt="" className='mt-2 h-16 rounded cursor-pointer'/>
-          <input onChange={(e)=> setImage(e.target.files[0])} type="file" id='image' hidden required/>
+          <img 
+            src={!image ? assets.upload_area : URL.createObjectURL(image)} 
+            alt="" 
+            className='mt-2 h-16 rounded cursor-pointer'/>
+
+          <input 
+            onChange={(e)=> setImage(e.target.files[0])} 
+            type="file" 
+            id='image' 
+            hidden 
+            required/>
         </label>
 
         <p className='mt-4'>Blog title</p>
-        <input type="text" placeholder='Type here' required className='w-full max-w-lg mt-2 p-2 border border-gray-300 outline-none rounded' onChange={e=> setTitle(e.target.value)} value={title} />
+        <input 
+          type="text" 
+          placeholder='Type here' 
+          required 
+          className='w-full max-w-lg mt-2 p-2 border border-gray-300 outline-none rounded' 
+          onChange={e=> setTitle(e.target.value)} 
+          value={title} 
+        />
 
         <p className='mt-4'>Sub Title</p>
-        <input type="text" placeholder='Type here' required className='w-full max-w-lg mt-2 p-2 border border-gray-300 outline-none rounded' onChange={e=> setSubTitle(e.target.value)} value={subTitle} />
+        <input 
+          type="text" 
+          placeholder='Type here' 
+          required 
+          className='w-full max-w-lg mt-2 p-2 border border-gray-300 outline-none rounded' 
+          onChange={e=> setSubTitle(e.target.value)} 
+          value={subTitle} 
+        />
 
+        <p className='mt-4'>Author Name</p>
+        <input
+          type="text"
+          placeholder="Enter author name"
+          required
+          className='w-full max-w-lg mt-2 p-2 border border-gray-300 outline-none rounded'
+          onChange={(e) => setAuthor(e.target.value)}
+          value={author}
+        />
+        
         <p className='mt-4'>Blog Description</p>
         <div className='max-w-lg h-72 pb-16 sm:pb-10 pt-2 relative'>
           <div ref={editorRef}></div>
-          <button type='button' onClick={generateContent} className='absolute bottom-1 right-2 ml-2 text-xs text-white bg-black/70 px-4 py-1.5 rounded hover:underline cursor-pointer'>Generate with AI</button>
+          <button 
+            type='button' 
+            onClick={generateContent} 
+            className='absolute bottom-1 right-2 ml-2 text-xs text-white bg-black/70 px-4 py-1.5 rounded hover:underline cursor-pointer'>
+              Generate with AI
+          </button>
         </div>
 
         <p className='mt-4'>Blog category</p>
-        <select onChange={e => setCategory(e.target.value)} name="category" className='mt-2 px-3 py-2 border text-gray-500 border-gray-300 outline-none rounded' id="">
+        <select 
+          onChange={e => setCategory(e.target.value)} 
+          name="category" 
+          className='mt-2 px-3 py-2 border text-gray-500 border-gray-300 outline-none rounded' 
+          id=""
+        >
           <option value="">Select Category</option>
           {blogCategories.map((item,index)=>{
             return <option key={index} value={item}>{item}</option>
