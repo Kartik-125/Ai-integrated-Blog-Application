@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
-const auth = (req, res, next) => {
+const userAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -15,22 +16,30 @@ const auth = (req, res, next) => {
 
     const decoded = jwt.verify(
       token,
-      process.env.ADMIN_JWT_SECRET
+      process.env.USER_JWT_SECRET
     );
 
-    if (decoded.type !== "admin") {
+    if (decoded.type !== "user") {
       return res.status(403).json({
         success: false,
-        message: "Admin access required",
+        message: "User access required",
       });
     }
 
-    req.admin = decoded;
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    req.user = user;
 
     next();
-
   } catch (error) {
-    console.error("Admin Auth Error:", error.message);
+    console.error("User Auth Error:", error.message);
 
     return res.status(401).json({
       success: false,
@@ -39,4 +48,4 @@ const auth = (req, res, next) => {
   }
 };
 
-export default auth;
+export default userAuth;
