@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import { sendEmail } from "../utils/sendEmail.js";
 import crypto from "crypto";
 
 // Register User
@@ -95,8 +96,8 @@ export const forgotPassword = async (req, res) => {
 
     if (!user) {
       return res.json({
-        success: false,
-        message: "User not found",
+        success: true,
+        message: "If an account with this email exists, a password reset email has been sent.",
       });
     }
 
@@ -114,11 +115,40 @@ export const forgotPassword = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
 
     await user.save();
+    const resetLink = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+    const emailSent = await sendEmail({
+      to: user.email,
+      subject: "Reset your Daily Reads password",
+      html: `
+        <h2>Password Reset</h2>
+
+        <p>Hello ${user.name},</p>
+
+        <p>You requested to reset your password.</p>
+
+        <p>
+          <a href="${resetLink}">
+            Click here to reset your password
+          </a>
+        </p>
+
+        <p>This link will expire in 15 minutes.</p>
+
+        <p>If you didn't request this, ignore this email.</p>
+      `,
+    });
+
+    if (!emailSent) {
+      return res.json({
+        success: false,
+        message: "Failed to send reset email",
+      });
+    }
 
     res.json({
       success: true,
-      message: "Password reset token generated",
-      resetToken,
+      message: "Password reset email sent successfully",
     });
 
   } catch (error) {
