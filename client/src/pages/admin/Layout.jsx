@@ -7,12 +7,12 @@ import { useAppContext } from "../../context/AppContext";
 
 const Layout = () => {
 
-  const { setToken } = useAppContext()
+  const { setAdminToken } = useAppContext()
 
   
   const logout = ()=>{
-    localStorage.removeItem("token");
-    setToken("");
+    localStorage.removeItem("adminToken");
+    setAdminToken("");
     navigate("/");
   }
   return (

@@ -5,7 +5,7 @@ import CommentTableItem from '../../components/admin/CommentTableItem'
 
 const Comments = () => {
 
-  const { axios, token } = useAppContext();
+  const { axios, adminToken } = useAppContext();
   const [comments, setComments] = useState([])
   const [filter, setFilter] = useState('Not Approved')
 
@@ -13,7 +13,7 @@ const Comments = () => {
   try {
     const { data } = await axios.get("/admin/comments", {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${adminToken}`,
       },
     });
 

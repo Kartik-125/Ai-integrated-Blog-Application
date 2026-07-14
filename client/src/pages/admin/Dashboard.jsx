@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 
 const Dashboard = () => {
 
-  const { axios, token } = useAppContext();
+  const { axios, adminToken } = useAppContext();
 
   const [dashboardData,setDashboardData] = useState({
     blogs: 0,
@@ -20,7 +20,7 @@ const Dashboard = () => {
   try {
     const { data } = await axios.get("/admin/dashboard", {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${adminToken}`,
       },
     });
 

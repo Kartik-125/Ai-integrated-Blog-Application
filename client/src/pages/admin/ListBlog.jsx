@@ -5,7 +5,7 @@ import BlogTableItem from '../../components/admin/BlogTableItem.jsx';
 
 const ListBlog = () => {
 
-  const { axios, token } = useAppContext();
+  const { axios, adminToken } = useAppContext();
 
   const [blogs, setBlogs] = useState([]);
 
@@ -13,7 +13,7 @@ const ListBlog = () => {
   try {
     const { data } = await axios.get("/admin/blogs", {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${adminToken}`,
       },
     });
 

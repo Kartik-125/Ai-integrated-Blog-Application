@@ -7,7 +7,7 @@ const Login = () => {
 
   const navigate = useNavigate();
 
-  const { axios, setToken } = useAppContext();
+  const { axios, setAdminToken } = useAppContext();
 
   const [email, setEmail] = useState("");
   
@@ -23,8 +23,9 @@ const Login = () => {
       });
 
       if (data.success) {
-        localStorage.setItem("token", data.token);
-        setToken(data.token);
+        
+        setAdminToken(data.token);
+        localStorage.setItem("adminToken", data.token);
 
         toast.success("Login Successful");
 

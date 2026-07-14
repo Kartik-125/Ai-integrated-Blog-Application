@@ -11,7 +11,7 @@ const addBlog = () => {
 
   const navigate = useNavigate();
 
-  const { axios, token } = useAppContext();
+  const { axios, adminToken } = useAppContext();
 
   const editorRef = useRef(null)
   const quillRef = useRef(null)
@@ -50,7 +50,7 @@ const addBlog = () => {
       formData,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${adminToken}`,
         },
       }
     );

@@ -4,12 +4,28 @@ import axiosInstance from "../api/axios";
 const AppContext = createContext();
 
 export const AppContextProvider = ({ children }) => {
-  const [token, setToken] = useState(localStorage.getItem("token") || "");
+
+  const [adminToken,setAdminToken] = useState(
+    localStorage.getItem("adminToken" || "")
+  );
+
+  const [userToken,setUserToken] = useState(
+    localStorage.getItem("userToken" || "")
+  );
+
+  const [user, setUser] = useState(null);
 
   const value = {
-    token,
-    setToken,
     axios: axiosInstance,
+
+    adminToken,
+    setAdminToken,
+    
+    userToken,
+    setUserToken,
+    
+    user,
+    setUser,
   };
 
   return (
