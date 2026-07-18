@@ -6,11 +6,11 @@ const AppContext = createContext();
 export const AppContextProvider = ({ children }) => {
 
   const [adminToken,setAdminToken] = useState(
-    localStorage.getItem("adminToken" || "")
+    localStorage.getItem("adminToken")
   );
 
   const [userToken,setUserToken] = useState(
-    localStorage.getItem("userToken" || "")
+    localStorage.getItem("userToken")
   );
 
   const [user, setUser] = useState(null);

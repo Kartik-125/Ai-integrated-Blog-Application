@@ -1,5 +1,7 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Public Pages
 import Home from "./pages/Home";
@@ -29,6 +31,7 @@ const App = () => {
   const { adminToken } = useAppContext();
 
   return (
+  <>
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Home />} />
@@ -57,6 +60,19 @@ const App = () => {
         <Route path="comments" element={<Comments />} />
       </Route>
     </Routes>
+
+    <ToastContainer
+      position="top-right"
+      autoClose={3000}
+      hideProgressBar={false}
+      newestOnTop
+      closeOnClick
+      pauseOnHover
+      theme="light"
+    />
+
+  </>  
+    
   );
 };
 

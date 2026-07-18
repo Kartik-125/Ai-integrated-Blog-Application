@@ -1,9 +1,80 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link , useNavigate} from "react-router-dom";
+import { toast } from "react-toastify";
+import { useAppContext } from "../../context/AppContext.jsx";
 
 const Login = () => {
 
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginType, setLoginType] = useState("user");
+  const [loading, setLoading] = useState(false);
+
+
+  const navigate = useNavigate();
+  const {
+    axios,
+    setUserToken,
+    setAdminToken,
+    setUser,
+  } = useAppContext();
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    if (!email.trim() || !password.trim()) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    try {
+    setLoading(true);
+
+    const endpoint =
+      loginType === "user" ? "/user/login" : "/admin/login";
+
+    const { data } = await axios.post(endpoint, {
+      email,
+      password,
+    });
+
+    if (!data.success) {
+      toast.error(data.message);
+      return;
+    }
+
+    if (loginType === "user") {
+      localStorage.setItem("userToken", data.token);
+
+      setUserToken(data.token);
+
+      setUser(data.user);
+
+      toast.success(data.message);
+
+      navigate("/");
+    } else {
+      localStorage.setItem("adminToken", data.token);
+
+      setAdminToken(data.token);
+
+      toast.success("Admin Login Successful");
+
+      navigate("/admin");
+    }
+
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error.response?.data?.message || "Something went wrong"
+      );
+    } finally {
+      setLoading(false);
+    }
+
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-100 flex items-center justify-center px-4">
@@ -22,7 +93,40 @@ const Login = () => {
 
         </div>
 
-        <form className="mt-8 space-y-5">
+        <form onSubmit={handleLogin} className="mt-8 space-y-5">
+
+          <div>
+
+            <label className="text-sm font-medium text-gray-700">
+              Login As
+            </label>
+
+            <div className="flex gap-6 mt-2">
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="loginType"
+                  value="user"
+                  checked={loginType === "user"}
+                  onChange={() => setLoginType("user")}
+                />
+                User
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="loginType"
+                  value="admin"
+                  checked={loginType === "admin"}
+                  onChange={() => setLoginType("admin")}
+                />
+                Admin
+              </label>
+
+            </div>
+          </div>
 
           <div>
 
@@ -33,6 +137,8 @@ const Login = () => {
             <input
               type="email"
               placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full mt-2 border rounded-lg p-3 outline-none focus:border-primary"
             />
 
@@ -49,6 +155,8 @@ const Login = () => {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full border rounded-lg p-3 outline-none focus:border-primary"
               />
 
@@ -76,6 +184,7 @@ const Login = () => {
           </div>
 
           <button
+            type="submit"
             className="w-full bg-primary text-white py-3 rounded-lg hover:opacity-90 transition"
           >
             Login
