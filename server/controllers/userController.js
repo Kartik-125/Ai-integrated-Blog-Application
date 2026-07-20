@@ -79,7 +79,6 @@ export const getUserProfile = async (req, res) => {
   }
 };
 
-// Forgot password
 // Forgot Password
 export const forgotPassword = async (req, res) => {
   try {
@@ -174,7 +173,7 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.json({
+      return res.status(401).json({
         success: false,
         message: "Invalid credentials",
       });
@@ -186,7 +185,7 @@ export const loginUser = async (req, res) => {
     );
 
     if (!isPasswordCorrect) {
-      return res.json({
+      return res.status(401).json({
         success: false,
         message: "Invalid credentials",
       });
@@ -255,6 +254,14 @@ export const resetPassword = async (req, res) => {
         success: false,
         message: "Invalid or expired reset token",
       });
+    }
+    if (password.length < 6) {
+      return res.json(
+        {
+        success: false,
+        message: "Password must be at least 6 characters",
+        }
+      );
     }
 
     // Hash new password

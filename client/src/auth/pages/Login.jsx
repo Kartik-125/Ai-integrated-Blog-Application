@@ -50,6 +50,7 @@ const Login = () => {
       setUserToken(data.token);
 
       setUser(data.user);
+      localStorage.setItem("user", JSON.stringify(data.user));
 
       toast.success(data.message);
 

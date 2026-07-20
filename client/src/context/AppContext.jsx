@@ -9,11 +9,28 @@ export const AppContextProvider = ({ children }) => {
     localStorage.getItem("adminToken")
   );
 
-  const [userToken,setUserToken] = useState(
+  const [userToken, setUserToken] = useState(
     localStorage.getItem("userToken")
   );
 
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const storedUser = localStorage.getItem("user");
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+
+  const logoutUser = () => {
+    localStorage.removeItem("userToken");
+    localStorage.removeItem("user");
+
+    setUserToken(null);
+    setUser(null);
+  };
+
+  const logoutAdmin = () => {
+    localStorage.removeItem("adminToken");
+
+    setAdminToken(null);
+  };
 
   const value = {
     axios: axiosInstance,
@@ -26,6 +43,9 @@ export const AppContextProvider = ({ children }) => {
     
     user,
     setUser,
+
+    logoutUser,
+    logoutAdmin,
   };
 
   return (

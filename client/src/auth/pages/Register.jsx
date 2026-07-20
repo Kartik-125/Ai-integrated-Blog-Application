@@ -33,6 +33,12 @@ const Register = () => {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
     if (password.length < 6) {
       toast.error("Password must be at least 6 characters");
       return;
@@ -62,14 +68,18 @@ const Register = () => {
       setUserToken(data.token);
 
       setUser(data.user);
+      localStorage.setItem("user", JSON.stringify(data.user));
 
       toast.success(data.message);
 
       navigate("/");
 
     } catch (error) {
+      console.log(error);
       toast.error(
-        error.response?.data?.message || "Something went wrong"
+        error.response?.data?.message ||
+        error.message ||
+        "Something went wrong"
       );
     } finally {
       setLoading(false);
@@ -171,9 +181,9 @@ const Register = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"
+            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Create Account...." : "Create Account"}
+            {loading ? "Creating Account...." : "Create Account"}
           </button>
 
           <p className="text-center text-sm">
