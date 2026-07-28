@@ -7,19 +7,19 @@ import Quill from 'quill';
 import 'quill/dist/quill.snow.css'
 
 
-const addBlog = () => {
+const CreateBlog = () => {
 
   const navigate = useNavigate();
 
-  const { axios, adminToken } = useAppContext();
+  const { axios, userToken } = useAppContext();
 
   const editorRef = useRef(null)
   const quillRef = useRef(null)
 
   const [image,setImage]= useState(false);
   const [title,setTitle]= useState('');
-  const [subTitle,setSubTitle]= useState('');
-  const [author, setAuthor] = useState('');
+  const [excerpt,setExcerpt]= useState('');
+  
   const [category,setCategory]= useState('Startup');
   const [isPublished,setIsPublished]= useState(false);
 
@@ -27,7 +27,7 @@ const addBlog = () => {
   e.preventDefault();
 
   try {
-    const description = quillRef.current.root.innerHTML;
+    const content = quillRef.current.root.innerHTML;
 
     const formData = new FormData();
 
@@ -37,20 +37,19 @@ const addBlog = () => {
       "blog",
       JSON.stringify({
         title,
-        subTitle,
-        author,
-        description,
+        excerpt,
+        content,
         category,
         isPublished,
       })
     );
 
     const { data } = await axios.post(
-      "/blog/add",
+      "/blog/create",
       formData,
       {
         headers: {
-          Authorization: `Bearer ${adminToken}`,
+          Authorization: `Bearer ${userToken}`,
         },
       }
     );
@@ -61,14 +60,13 @@ const addBlog = () => {
 
       setImage(false);
       setTitle("");
-      setSubTitle("");
-      setAuthor("");
+      setExcerpt("");
       setCategory("Startup");
       setIsPublished(false);
 
       quillRef.current.setText("");
 
-      navigate("/admin/listblog");
+      navigate("/");
     } else {
       toast.error(data.message);
     }
@@ -117,25 +115,16 @@ const addBlog = () => {
           value={title} 
         />
 
-        <p className='mt-4'>Sub Title</p>
+        <p className='mt-4'>excerpt</p>
         <input 
           type="text" 
           placeholder='Type here' 
           required 
           className='w-full max-w-lg mt-2 p-2 border border-gray-300 outline-none rounded' 
-          onChange={e=> setSubTitle(e.target.value)} 
-          value={subTitle} 
+          onChange={e=> setExcerpt(e.target.value)} 
+          value={excerpt} 
         />
 
-        <p className='mt-4'>Author Name</p>
-        <input
-          type="text"
-          placeholder="Enter author name"
-          required
-          className='w-full max-w-lg mt-2 p-2 border border-gray-300 outline-none rounded'
-          onChange={(e) => setAuthor(e.target.value)}
-          value={author}
-        />
         
         <p className='mt-4'>Blog Description</p>
         <div className='max-w-lg h-72 pb-16 sm:pb-10 pt-2 relative'>
@@ -173,4 +162,4 @@ const addBlog = () => {
   )
 }
 
-export default addBlog
+export default CreateBlog;

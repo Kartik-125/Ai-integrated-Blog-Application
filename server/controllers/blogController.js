@@ -1,276 +1,302 @@
-import fs from 'fs'
-import imagekit from '../configs/imageKit.js';
-import Blog from '../models/Blog.js'
-import Comment from '../models/Comment.js';
-import mongoose from 'mongoose';
+import fs from "fs";
+import imagekit from "../configs/imageKit.js";
+import Blog from "../models/Blog.js";
+import Comment from "../models/Comment.js";
+import mongoose from "mongoose";
 
+// =========================
+// Create Blog
+// =========================
+export const createBlog = async (req, res) => {
+  try {
+    const { title, excerpt, content, category, isPublished } = JSON.parse(
+      req.body.blog
+    );
 
-//add blogs
-export const addBlog = async (req, res)=>{
-    try{
-        
-        const {title, subTitle, author, description, category, isPublished} = 
-            JSON.parse(req.body.blog);
-        
+    const imageFile = req.file;
 
-        const imageFile = req.file;
-
-
-        if(!title || !author || !description || !category || !imageFile){
-            return res.json({
-                success: false, 
-                message: "missing required fields"
-            });
-        }
-
-        //Read Uploaded image
-        const fileBuffer = fs.readFileSync(imageFile.path)
-
-        // upload image to image kit
-        const response = await imagekit.upload({
-            file: fileBuffer,
-            fileName: imageFile.originalname,
-            folder: "/blogs"
-        });
-
-        const image = response.url;
-
-        const imageFileId = response.fileId;
-
-        // Delete temporary file
-        fs.unlinkSync(imageFile.path);
-
-        //Save the blog in MongoDB
-        const blog = await Blog.create({
-            title, 
-            subTitle, 
-            author,
-            description, 
-            category, 
-            image, 
-            imageFileId,
-            isPublished
-        });
-
-        res.json({
-            success:true, 
-            message: "Blog added successfully",
-            blog
-        });   
-    } catch(error) {
-        res.json({
-            success:false, 
-            message: error.message
-        });
+    if (!title || !excerpt || !content || !category || !imageFile) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+      });
     }
+
+    // Read uploaded image
+    const fileBuffer = fs.readFileSync(imageFile.path);
+
+    // Upload image to ImageKit
+    const response = await imagekit.upload({
+      file: fileBuffer,
+      fileName: imageFile.originalname,
+      folder: "/blogs",
+    });
+
+    // Delete temporary image
+    fs.unlinkSync(imageFile.path);
+
+    const image = response.url;
+    const imageFileId = response.fileId;
+
+    // Generate slug
+    let slug = title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, "-");
+
+    // Make slug unique
+    const existingSlug = await Blog.findOne({ slug });
+
+    if (existingSlug) {
+      slug = `${slug}-${Date.now()}`;
+    }
+
+    // Save blog
+    const blog = await Blog.create({
+      title,
+      excerpt,
+      content,
+      category,
+      image,
+      imageFileId,
+      author: req.userId,
+      slug,
+      isPublished,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Blog created successfully",
+      blog,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
-// get all published blogs
-export const getAllBlogs = async(req, res) =>{
-    try{
-        const blogs = await Blog.find({
-            isPublished: true
-        }).sort({
-            createdAt: -1,
-        });
+// =========================
+// Get All Published Blogs
+// =========================
+export const getAllBlogs = async (req, res) => {
+  try {
+    const blogs = await Blog.find({
+      isPublished: true,
+    })
+      .populate("author", "name")
+      .sort({
+        createdAt: -1,
+      });
 
-        res.json({
-            success: true, 
-            blogs
-        });
-    } catch(error) {
-        res.json({
-            success: false,
-            message: error.message
-        });
-    }
+    return res.status(200).json({
+      success: true,
+      blogs,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
+// =========================
 // Get Blog By Id
-export const getBlogById = async(req,res) =>{
-    try{
-        const { blogId } = req.params;
+// =========================
+export const getBlogById = async (req, res) => {
+  try {
+    const { blogId } = req.params;
 
-        if (!mongoose.Types.ObjectId.isValid(blogId)) {
-        return res.json(
-            {
-                success: false,
-                message: "Invalid Blog ID"
-            }
-        );
-}
-
-        const blog = await Blog.findOne({
-            _id: blogId,
-            isPublished: true
-        })
-        
-        if(!blog){
-            return res.json({
-                success: false, 
-                message: "Blog not found"
-            });
-        }
-
-        res.json({
-            success: true, 
-            blog
-        });
-    } catch(error){
-        res.json({
-            success:false, 
-            message: error.message
-        });
+    if (!mongoose.Types.ObjectId.isValid(blogId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Blog ID",
+      });
     }
+
+    const blog = await Blog.findOne({
+      _id: blogId,
+      isPublished: true,
+    }).populate("author", "name email");
+
+    if (!blog) {
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found",
+      });
+    }
+
+    blog.views += 1;
+    await blog.save();
+
+    return res.status(200).json({
+      success: true,
+      blog,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
-// Delete Blog By Id
-export const deleteBlogById = async(req,res) =>{
-    try{
-        const {blogId} = req.body;
+// =========================
+// Delete Blog
+// =========================
+export const deleteBlogById = async (req, res) => {
+  try {
+    const { blogId } = req.body;
 
-        if (!mongoose.Types.ObjectId.isValid(blogId)) {
-            return res.json(
-                {
-                    success: false,
-                    message: "Invalid Blog ID"
-                }
-            );
-        }
-
-        const blog = await Blog.findById(blogId);
-
-        if(!blog){
-            return res.json({
-            success: false, 
-            message: 'Blog not found'
-            });
-        }
-
-        // delete image from ImageKit
-        await imagekit.deleteFile(blog.imageFileId);
-
-        // Delete blog
-        await Blog.findByIdAndDelete(blogId);
-
-        // delete all comments of this blog
-        await Comment.deleteMany({
-            blog: blogId
-        });
-
-        res.json({
-        success: true,
-        message: "Blog deleted successfully",
-        });
-    } catch(error){
-        res.json({
-            success: false, 
-            message: error.message
-        });
+    if (!mongoose.Types.ObjectId.isValid(blogId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Blog ID",
+      });
     }
+
+    const blog = await Blog.findById(blogId);
+
+    if (!blog) {
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found",
+      });
+    }
+
+    // Delete image from ImageKit
+    await imagekit.deleteFile(blog.imageFileId);
+
+    // Delete blog
+    await Blog.findByIdAndDelete(blogId);
+
+    // Delete comments
+    await Comment.deleteMany({
+      blog: blogId,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Blog deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
+// =========================
+// Publish / Unpublish Blog
+// =========================
+export const togglePublish = async (req, res) => {
+  try {
+    const { id } = req.body;
 
-// Publish or Unpublish Blog
-export const togglePublish = async(req, res)=>{
-    try{
-        const { id } = req.body;
-        
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.json(
-                {
-                success: false,
-                message: "Invalid Blog ID"
-                }
-            );
-        }
-
-        const blog = await Blog.findById(id);
-        
-        if(!blog){
-            return res.json({
-                success:false, 
-                message: "Blog not found"
-            });
-        }
-
-        blog.isPublished  = !blog.isPublished;
-        
-        await blog.save();
-        
-        res.json({
-            success: true, 
-            message: 'Blog status updated',
-            isPublished: blog.isPublished
-        });
-    } catch(error){
-        res.json({
-            success: false, 
-            message: error.message
-        });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Blog ID",
+      });
     }
+
+    const blog = await Blog.findById(id);
+
+    if (!blog) {
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found",
+      });
+    }
+
+    blog.isPublished = !blog.isPublished;
+
+    await blog.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Blog status updated",
+      isPublished: blog.isPublished,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
-// add comment
+// =========================
+// Add Comment
+// =========================
 export const addComment = async (req, res) => {
-    try{
-        const {blog, name, content} = req.body;
+  try {
+    const { blog, name, content } = req.body;
 
-        if(!blog || !name || !content){
-            return res.json({
-            success: false, 
-            message: "Missing Required Fields"
-            });
-        }
-
-        const blogExists = await Blog.findById(blog);
-
-        if (!blogExists || !blogExists.isPublished) {
-        return res.json({
-            success: false,
-            message: "Blog not found",
-            });
-        }
-
-        await Comment.create({
-            blog, 
-            name, 
-            content
-        });
-        
-        res.json({
-            success: true, 
-            message: 'Comment added for review'
-        });
-    } catch(error){
-        res.json({
-            success: false, 
-            message: error.message
-        });
+    if (!blog || !name || !content) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+      });
     }
+
+    const blogExists = await Blog.findById(blog);
+
+    if (!blogExists || !blogExists.isPublished) {
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found",
+      });
+    }
+
+    await Comment.create({
+      blog,
+      name,
+      content,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Comment added for review",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
-// get approved blog comments
-export const getBlogComments = async(req, res) => {
-    try{
-        const {blogId} = req.body;
+// =========================
+// Get Approved Comments
+// =========================
+export const getBlogComments = async (req, res) => {
+  try {
+    const { blogId } = req.body;
 
-        const comments = await Comment.find({
-            blog: blogId, 
-            isApproved: true
-        }).sort({
-            createdAt: -1
-        });
+    const comments = await Comment.find({
+      blog: blogId,
+      isApproved: true,
+    }).sort({
+      createdAt: -1,
+    });
 
-        res.json({
-            success: true, 
-            comments
-        });
-    } catch(error){
-        console.error()
-        res.json({
-            success: false, 
-            message: error.message
-        });
-    }
+    return res.status(200).json({
+      success: true,
+      comments,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };

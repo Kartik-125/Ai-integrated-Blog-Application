@@ -12,6 +12,12 @@ const userAuth = async (req, res, next) => {
       });
     }
 
+    if (!authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid authorization format",
+      });
+    }
     const token = authHeader.split(" ")[1];
 
     const decoded = jwt.verify(
@@ -36,10 +42,11 @@ const userAuth = async (req, res, next) => {
     }
 
     req.user = user;
+    req.userId = user._id;
 
     next();
   } catch (error) {
-    console.error("User Auth Error:", error.message);
+    console.error("User Auth Error:", error);
 
     return res.status(401).json({
       success: false,

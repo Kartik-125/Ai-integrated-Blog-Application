@@ -1,12 +1,20 @@
     import express from "express";
-    import { addBlog, addComment, deleteBlogById, getAllBlogs, getBlogById, getBlogComments, togglePublish } from "../controllers/blogController.js";
+    import { 
+        createBlog,
+        addComment,
+        deleteBlogById,
+        getAllBlogs,
+        getBlogById,
+        getBlogComments,
+        togglePublish } from "../controllers/blogController.js";
     import upload from "../middleware/multer.js";
     import auth from "../middleware/auth.js";
+    import userAuth from "../middleware/userAuth.js";
 
     const blogRouter = express.Router();
 
     // Admin
-    blogRouter.post("/add", auth, upload.single("image"), addBlog);
+    blogRouter.post("/create", userAuth, upload.single("image"), createBlog);
 
     blogRouter.post("/delete", auth, deleteBlogById);
 
@@ -17,7 +25,7 @@
 
     blogRouter.get("/:blogId", getBlogById);
 
-    blogRouter.post("/add-comment", addComment);
+    blogRouter.post("/comment", addComment);
 
     blogRouter.post("/comments", getBlogComments);
 
