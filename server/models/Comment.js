@@ -7,10 +7,10 @@ const commentSchema = new mongoose.Schema(
             ref: 'Blog',
             required: true
         },
-        name: {
-            type: String,
+         user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
             required: true,
-            trim: true
         },
         content: {
             type: String,
@@ -27,6 +27,8 @@ const commentSchema = new mongoose.Schema(
     }
 );
 
+commentSchema.index({ blog: 1 });
+commentSchema.index({ user: 1 });
 const Comment = mongoose.model('Comment', commentSchema);
 
 export default Comment; 

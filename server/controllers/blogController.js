@@ -9,7 +9,7 @@ import mongoose from "mongoose";
 // =========================
 export const createBlog = async (req, res) => {
   try {
-    const { title, excerpt, content, category, isPublished } = JSON.parse(
+    const { title, excerpt, content, category } = JSON.parse(
       req.body.blog
     );
 
@@ -62,14 +62,14 @@ export const createBlog = async (req, res) => {
       imageFileId,
       author: req.userId,
       slug,
-      isPublished,
+      isPublished: false,
     });
 
     return res.status(201).json({
       success: true,
       message: "Blog created successfully",
       blog,
-    });
+    }); 
   } catch (error) {
     console.error(error);
 
@@ -237,9 +237,9 @@ export const togglePublish = async (req, res) => {
 // =========================
 export const addComment = async (req, res) => {
   try {
-    const { blog, name, content } = req.body;
+    const { blog, content } = req.body;
 
-    if (!blog || !name || !content) {
+    if (!blog || !content) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields",
@@ -257,7 +257,7 @@ export const addComment = async (req, res) => {
 
     await Comment.create({
       blog,
-      name,
+      user: req.userId,
       content,
     });
 
@@ -283,7 +283,9 @@ export const getBlogComments = async (req, res) => {
     const comments = await Comment.find({
       blog: blogId,
       isApproved: true,
-    }).sort({
+    })
+    .populate("user", "name")
+    .sort({
       createdAt: -1,
     });
 
@@ -299,4 +301,29 @@ export const getBlogComments = async (req, res) => {
       message: error.message,
     });
   }
+};
+
+// Get Logged In User Blogs
+export const getMyBlogs = async (req, res) => {
+    try {
+
+        const blogs = await Blog.find({ author: req.userId })
+            .populate("author", "name email")
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            success: true,
+            blogs
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch your blogs."
+        });
+
+    }
 };
