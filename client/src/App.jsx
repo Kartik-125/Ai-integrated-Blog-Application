@@ -16,10 +16,17 @@ import ResetPasswordPage from "./auth/pages/ResetPassword";
 // Admin Pages
 import Layout from "./pages/admin/Layout";
 import Dashboard from "./pages/admin/Dashboard";
-import AddBlog from "./pages/admin/AddBlog";
 import Comments from "./pages/admin/Comments";
-import ListBlog from "./pages/admin/ListBlog";
+import ManageBlogs from "./pages/admin/ManageBlogs";
 import Login from "./components/admin/Login";
+
+// User Pages
+import Userlayout from "./pages/user/Userlayout";
+import UserDashboard from "./pages/user/UserDashboard";
+import CreateBlog from "./pages/user/CreateBlog";
+import MyBlogs from "./pages/user/MyBlogs";
+import Profile from "./pages/user/Profile";
+import EditBlog from "./pages/user/EditBlog";
 
 // Context
 import { useAppContext } from "./context/AppContext";
@@ -28,7 +35,7 @@ import { useAppContext } from "./context/AppContext";
 import "quill/dist/quill.snow.css";
 
 const App = () => {
-  const { adminToken } = useAppContext();
+  const { adminToken, userToken } = useAppContext();
 
   return (
   <>
@@ -49,14 +56,39 @@ const App = () => {
         element={<ResetPasswordPage />}
       />
 
+      {/* User Dashboard */}
+      <Route
+        path="/dashboard"
+        element={
+          userToken ? (
+            <Userlayout />
+          ) : (
+            <LoginPage />
+          )
+        }
+      >
+        <Route index element={<UserDashboard />} />
+
+        <Route path="create-blog" element={<CreateBlog />} />
+
+        <Route path="my-blogs" element={<MyBlogs />} />
+
+        <Route path="profile" element={<Profile />} />
+
+        <Route path="edit-blog/:id" element={<EditBlog />} />
+        
+      </Route>
+      
       {/* Admin Routes */}
       <Route
         path="/admin"
-        element={adminToken ? <Layout /> : <Login />}
+        element={
+          adminToken?
+            <Layout/> : <Login/>
+        }
       >
         <Route index element={<Dashboard />} />
-        <Route path="addblog" element={<AddBlog />} />
-        <Route path="listblog" element={<ListBlog />} />
+        <Route path="manage-blogs" element={<ManageBlogs />} />
         <Route path="comments" element={<Comments />} />
       </Route>
     </Routes>

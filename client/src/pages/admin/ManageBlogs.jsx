@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 import { useAppContext } from "../../context/AppContext.jsx";
 import BlogTableItem from '../../components/admin/BlogTableItem.jsx';
 
-const ListBlog = () => {
+const ManageBlogs = () => {
 
   const { axios, adminToken } = useAppContext();
 
@@ -61,4 +61,4 @@ const ListBlog = () => {
   )
 }
 
-export default ListBlog
+export default ManageBlogs;
