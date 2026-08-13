@@ -56,6 +56,15 @@ const App = () => {
         element={<ResetPasswordPage />}
       />
 
+      {/* User Routes */}
+      <Route path="/dashboard" element={<Userlayout />}>
+        <Route index element={<UserDashboard />} />
+        <Route path="create-blog" element={<CreateBlog />} />
+        <Route path="my-blogs" element={<MyBlogs />} />
+        <Route path="edit-blog/:id" element={<EditBlog />} />
+        <Route path="profile" element={<Profile />} />
+      </Route>
+
       {/* User Dashboard */}
       <Route
         path="/dashboard"

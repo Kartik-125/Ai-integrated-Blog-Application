@@ -81,6 +81,94 @@ export const createBlog = async (req, res) => {
 };
 
 // =========================
+// Update Blog
+// =========================
+export const updateBlog = async (req, res) => {
+  try {
+    const { blogId } = req.params;
+
+    const { title, excerpt, content, category } = JSON.parse(
+      req.body.blog
+    );
+
+    if (!mongoose.Types.ObjectId.isValid(blogId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Blog ID",
+      });
+    }
+
+    if (!title || !excerpt || !content || !category) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+      });
+    }
+
+    const blog = await Blog.findById(blogId);
+
+    if (!blog) {
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found",
+      });
+    }
+
+    // Only the author who created the blog can update it
+    if (blog.author.toString() !== req.userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to update this blog",
+      });
+    }
+
+    blog.title = title;
+    blog.excerpt = excerpt;
+    blog.content = content;
+    blog.category = category;
+
+    // If the blog was already published,
+    // editing it sends it back for admin review.
+    blog.isPublished = false;
+
+    // If a new image was uploaded
+    if (req.file) {
+      const fileBuffer = fs.readFileSync(req.file.path);
+
+      const response = await imagekit.upload({
+        file: fileBuffer,
+        fileName: req.file.originalname,
+        folder: "/blogs",
+      });
+
+      fs.unlinkSync(req.file.path);
+
+      // Delete old image
+      await imagekit.deleteFile(blog.imageFileId);
+
+      blog.image = response.url;
+      blog.imageFileId = response.fileId;
+    }
+
+    await blog.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Blog updated successfully and submitted for review",
+      blog,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+// =========================
 // Get All Published Blogs
 // =========================
 export const getAllBlogs = async (req, res) => {
