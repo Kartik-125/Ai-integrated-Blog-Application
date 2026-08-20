@@ -37,16 +37,16 @@ const filteredBlogs = blogs.filter((blog) => {
 
   const searchText = (search || "").toLowerCase();
 
-  const plainDescription = blog.description
+  const plainContent = blog.content
     ?.replace(/<[^>]*>/g, "")
     .toLowerCase();
 
   const matchesSearch =
     blog.title?.toLowerCase().includes(searchText) ||
-    blog.subTitle?.toLowerCase().includes(searchText) ||
+    blog.excerpt?.toLowerCase().includes(searchText) ||
     blog.category?.toLowerCase().includes(searchText) ||
-    blog.author?.toLowerCase().includes(searchText) ||
-    plainDescription?.includes(searchText);
+    blog.author?.name?.toLowerCase().includes(searchText) ||
+    plainContent?.includes(searchText);
 
   return matchesCategory && matchesSearch;
 });

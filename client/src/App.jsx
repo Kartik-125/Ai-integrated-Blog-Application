@@ -25,7 +25,7 @@ import Userlayout from "./pages/user/Userlayout";
 import UserDashboard from "./pages/user/UserDashboard";
 import CreateBlog from "./pages/user/CreateBlog";
 import MyBlogs from "./pages/user/MyBlogs";
-import Profile from "./pages/user/Profile";
+// import Profile from "./pages/user/Profile";
 import EditBlog from "./pages/user/EditBlog";
 
 // Context
@@ -56,14 +56,6 @@ const App = () => {
         element={<ResetPasswordPage />}
       />
 
-      {/* User Routes */}
-      <Route path="/dashboard" element={<Userlayout />}>
-        <Route index element={<UserDashboard />} />
-        <Route path="create-blog" element={<CreateBlog />} />
-        <Route path="my-blogs" element={<MyBlogs />} />
-        <Route path="edit-blog/:id" element={<EditBlog />} />
-        <Route path="profile" element={<Profile />} />
-      </Route>
 
       {/* User Dashboard */}
       <Route
@@ -82,7 +74,7 @@ const App = () => {
 
         <Route path="my-blogs" element={<MyBlogs />} />
 
-        <Route path="profile" element={<Profile />} />
+        {/* <Route path="profile" element={<Profile />} /> */}
 
         <Route path="edit-blog/:id" element={<EditBlog />} />
         

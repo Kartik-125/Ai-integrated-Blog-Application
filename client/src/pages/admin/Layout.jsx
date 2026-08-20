@@ -8,6 +8,7 @@ import { useAppContext } from "../../context/AppContext";
 const Layout = () => {
 
   const { setAdminToken } = useAppContext()
+  const navigate = useNavigate();
 
   
   const logout = ()=>{

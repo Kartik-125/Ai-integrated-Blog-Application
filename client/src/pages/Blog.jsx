@@ -11,12 +11,12 @@ import Loader from '../components/Loader'
 const Blog = () => {
   
   const { id } = useParams()
-  const { axios } = useAppContext()
+  const { axios, userToken } = useAppContext()
 
   const [data, setData] = useState(null)
   const [comments, setComments] = useState([])
 
-  const [name, setName] =useState('')
+  
   const [content, setContent] =useState('')
 
 
@@ -54,28 +54,33 @@ const Blog = () => {
 
 
   const addComment = async (e) => {
-  e.preventDefault()
+    e.preventDefault()
 
-  try {
-    const { data } = await axios.post("/blog/add-comment", {
-      blog: id,
-      name,
-      content
-    })
+    try {
+      const { data } = await axios.post("/blog/comment", {
+        blog: id,
+        content
+      },
+      {
+        headers:{
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    );
 
-    if (data.success) {
-      toast.success(data.message)
-
-      setName("")
-      setContent("")
-    } else {
-      toast.error(data.message)
+      if (data.success) {
+        toast.success(data.message);
+        setContent("");
+        fetchComments();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error("Failed to add comment")
     }
-  } catch (error) {
-    console.error(error)
-    toast.error("Failed to add comment")
-  }
-}
+  };
+
   useEffect(() => {
     fetchBlogData()
     fetchComments()
@@ -95,9 +100,9 @@ const Blog = () => {
 
         <h1 className='text-2xl sm:text-5xl font-semibold max-w-2xl mx-auto text-gray-800'>{data.title}</h1>
 
-        <h2 className='my-5 max-w-lg truncate mx-auto'>{data.subTitle}</h2>
+        <h2 className='my-5 max-w-lg truncate mx-auto'>{data.excerpt}</h2>
 
-        <p className='inline-block py-1 px-4 rounded-full mb-6 border text-sm border-primary/35 bg-primary/5 font-medium text-primary'> {data.author} </p>
+        <p className='inline-block py-1 px-4 rounded-full mb-6 border text-sm border-primary/35 bg-primary/5 font-medium text-primary'> {data.author?.name} </p>
 
       </div>
 
@@ -105,7 +110,7 @@ const Blog = () => {
         
         <img src={data.image} alt="" className='rounded-3xl mb-5' />
         
-        <div dangerouslySetInnerHTML={{ __html: data.description }} className='rich-text max-w-3xl mx-auto'></div>
+        <div dangerouslySetInnerHTML={{ __html: data.content }} className='rich-text max-w-3xl mx-auto'></div>
 
         {/* {comment section} */}
         <div className='mt-14 mb-10 max-w-3xl mx-auto'>
@@ -115,7 +120,7 @@ const Blog = () => {
               <div key={item._id} className='relative bg-primary/2 border border-primary/5 max-w-xl p-4 rounded text-gray-600'>
                 <div className='flex items-center gap-2 mb-2'>
                   <img src={assets.user_icon} className='w-6' alt="" />
-                  <p className='font-medium'>{item.name}</p>
+                  <p className='font-medium'>{item.user?.name}</p>
                 </div>
                 <p className='text-sm max-w-md ml-8'>{item.content}</p>
                 <div className='absolute right-4 bottom-3 flex items-center gap-2 text-xs'>
@@ -130,8 +135,6 @@ const Blog = () => {
         <div className='max-w-3xl mx-auto'>
           <p className='font-semibold mb-4'>Add your Comment</p>
           <form onSubmit={addComment} className='flex flex-col items-start gap-4 max-w-lg'>
-
-            <input onChange={(e)=> setName(e.target.value)} value={name} type="text" placeholder='Name' required  className='w-full p-2 border border-gray-300 rounded outline-none'/>
 
             <textarea onChange={(e)=> setContent(e.target.value)} value={content} placeholder='Content' required className='w-full p-2 border border-gray-300 rounded outline-none h-48'></textarea>
 

@@ -5,7 +5,7 @@ import { assets } from '../../assets/assets';
 
 const CommentTableItem = ({comment, fetchComments}) => {
     
-    const { axios, token } = useAppContext();
+    const { axios, adminToken } = useAppContext();
 
     const {blog,createdAt,_id} = comment;
     // const BlogDate = new Date(createdAt);
@@ -20,7 +20,7 @@ const CommentTableItem = ({comment, fetchComments}) => {
       },
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${adminToken}`,
         },
       }
     );
@@ -52,7 +52,7 @@ const deleteComment = async () => {
       },
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${adminToken}`,
         },
       }
     );
@@ -75,7 +75,7 @@ const deleteComment = async () => {
             <b className='font-medium text-gray-600'>Blog</b> : {blog.title}
             <br />
             <br />
-            <b className='font-medium text-gray-600'>Name</b> : {comment.name}
+            <b className='font-medium text-gray-600'>Name</b> : {comment.user?.name}
             <br />
             <b className='font-medium text-gray-600'>Comment</b> : {comment.content}
         </td>

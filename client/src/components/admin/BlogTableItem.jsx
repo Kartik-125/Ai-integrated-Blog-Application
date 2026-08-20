@@ -5,7 +5,7 @@ import { assets } from '../../assets/assets.js';
 
 const BlogTableItem = ({blog, fetchBlogs, index}) => {
 
-  const { axios, token } = useAppContext();
+  const { axios, adminToken } = useAppContext();
   const{title, createdAt}= blog;
   const BlogDate = new Date(createdAt)
 
@@ -18,7 +18,7 @@ const BlogTableItem = ({blog, fetchBlogs, index}) => {
       },
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${adminToken}`,
         },
       }
     );
@@ -51,7 +51,7 @@ const deleteBlog = async () => {
       },
       {
         headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${adminToken}`,
         },
       }
     );

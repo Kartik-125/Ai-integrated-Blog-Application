@@ -7,11 +7,11 @@ import {
   LuEye,
 } from "react-icons/lu";
 
-import { useAppContext } from "../../context/AppContext";
+import { useAppContext } from "../../context/AppContext.jsx";
 
-import DashboardCard from "../../components/user/DashboardCard";
-import RecentBlogsTable from "../../components/user/RecentBlogsTable";
-import EmptyDashboard from "../../components/user/EmptyDashboard";
+import DashboardCard from "../../components/user/DashboardCard.jsx";
+import RecentBlogsTable from "../../components/user/RecentBlogTable.jsx";
+import EmptyDashboard from "../../components/user/EmptyDashboard.jsx";
 
 const UserDashboard =()  => {
 
@@ -112,7 +112,7 @@ const UserDashboard =()  => {
       {
         blogs.length === 0
         ? <EmptyDashboard />
-        : <RecentBlogsTable blogs={blogs} />
+        : <RecentBlogTable blogs={blogs} />
       }
 
     </div>
