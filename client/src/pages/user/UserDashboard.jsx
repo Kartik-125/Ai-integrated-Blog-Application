@@ -112,7 +112,7 @@ const UserDashboard =()  => {
       {
         blogs.length === 0
         ? <EmptyDashboard />
-        : <RecentBlogTable blogs={blogs} />
+        : <RecentBlogsTable blogs={blogs} />
       }
 
     </div>
