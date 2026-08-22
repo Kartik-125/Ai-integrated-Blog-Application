@@ -7,7 +7,7 @@ import {
   LuUser,
   LuLogOut,
 } from "react-icons/lu";
-
+import { BsBookmark } from "react-icons/bs";
 import { useAppContext } from "../../context/AppContext";
 
 const Sidebar = () => {
@@ -26,6 +26,11 @@ const Sidebar = () => {
       icon: LuLayoutDashboard,
     },
     {
+      name: "Profile",
+      path: "/dashboard/profile",
+      icon: LuUser,
+    },
+    {
       name: "Create Blog",
       path: "/dashboard/create-blog",
       icon: LuSquarePen,
@@ -36,10 +41,11 @@ const Sidebar = () => {
       icon: LuBookOpen,
     },
     {
-      name: "Profile",
-      path: "/dashboard/profile",
-      icon: LuUser,
+      name: "Bookmarks",
+      path: "/dashboard/bookmarks",
+      icon: BsBookmark,
     },
+    
   ];
 
   return (

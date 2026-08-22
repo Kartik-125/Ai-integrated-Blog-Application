@@ -21,15 +21,16 @@ const EditBlog = () => {
   const [excerpt, setExcerpt] = useState("");
   const [category, setCategory] = useState("Startup");
   const [loading, setLoading] = useState(true);
+  const [blogContent, setBlogContent] = useState("");
 
   // Initialize Quill
   useEffect(() => {
-    if (!quillRef.current && editorRef.current) {
+    if (!loading && !quillRef.current && editorRef.current) {
       quillRef.current = new Quill(editorRef.current, {
         theme: "snow",
       });
     }
-  }, []);
+  }, [loading]);
 
   // Fetch user's blogs and find the blog being edited
   useEffect(() => {
@@ -56,18 +57,17 @@ const EditBlog = () => {
           setExcerpt(blog.excerpt);
           setCategory(blog.category);
           setCurrentImage(blog.image);
-
-          if (quillRef.current) {
-            quillRef.current.root.innerHTML = blog.content;
-          }
+          setBlogContent(blog.content);
 
           setLoading(false);
         } else {
           toast.error(data.message);
+          setLoading(false)
         }
       } catch (error) {
         console.error(error);
         toast.error("Failed to load blog");
+        setLoading(false)
       }
     };
 
@@ -75,6 +75,12 @@ const EditBlog = () => {
       fetchBlog();
     }
   }, [userToken, id]);
+
+  useEffect(() => {
+    if (!loading && quillRef.current && blogContent) {
+      quillRef.current.root.innerHTML = blogContent;
+    }
+  }, [loading, blogContent]);
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();

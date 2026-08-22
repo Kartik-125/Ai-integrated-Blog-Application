@@ -62,7 +62,8 @@ export const createBlog = async (req, res) => {
       imageFileId,
       author: req.userId,
       slug,
-      isPublished: false,
+      status: "pending",
+      rejectionReason: "",
     });
 
     return res.status(201).json({
@@ -129,7 +130,8 @@ export const updateBlog = async (req, res) => {
 
     // If the blog was already published,
     // editing it sends it back for admin review.
-    blog.isPublished = false;
+    blog.status = "pending";
+    blog.rejectionReason = "";
 
     // If a new image was uploaded
     if (req.file) {
@@ -174,7 +176,7 @@ export const updateBlog = async (req, res) => {
 export const getAllBlogs = async (req, res) => {
   try {
     const blogs = await Blog.find({
-      isPublished: true,
+      status: "approved",
     })
       .populate("author", "name")
       .sort({
@@ -189,6 +191,32 @@ export const getAllBlogs = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message,
+    });
+  }
+};
+
+// =========================
+// Get Bookmarked Blogs
+// =========================
+export const getBookmarkedBlogs = async (req, res) => {
+  try {
+    const blogs = await Blog.find({
+      bookmarks: req.userId,
+      status: "approved",
+    })
+      .populate("author", "name email")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      blogs,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch bookmarked blogs",
     });
   }
 };
@@ -209,7 +237,7 @@ export const getBlogById = async (req, res) => {
 
     const blog = await Blog.findOne({
       _id: blogId,
-      isPublished: true,
+      status: "approved",
     }).populate("author", "name email");
 
     if (!blog) {
@@ -336,7 +364,7 @@ export const addComment = async (req, res) => {
 
     const blogExists = await Blog.findById(blog);
 
-    if (!blogExists || !blogExists.isPublished) {
+    if (!blogExists || !blogExists.status !== "approved") {
       return res.status(404).json({
         success: false,
         message: "Blog not found",
@@ -414,4 +442,104 @@ export const getMyBlogs = async (req, res) => {
         });
 
     }
+};
+
+// =========================
+// Toggle Bookmark
+// =========================
+export const toggleBookmark = async (req, res) => {
+  try {
+    const { blogId } = req.body;
+    const userId = req.userId;
+
+    if (!mongoose.Types.ObjectId.isValid(blogId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Blog ID",
+      });
+    }
+
+    const blog = await Blog.findById(blogId);
+
+    if (!blog) {
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found",
+      });
+    }
+
+    const alreadyBookmarked = blog.bookmarks.includes(userId);
+
+    if (alreadyBookmarked) {
+      blog.bookmarks = blog.bookmarks.filter(
+        (id) => id.toString() !== userId.toString()
+      );
+
+      await blog.save();
+
+      return res.status(200).json({
+        success: true,
+        bookmarked: false,
+        message: "Blog removed from bookmarks",
+      });
+    }
+
+    blog.bookmarks.push(userId);
+
+    await blog.save();
+
+    return res.status(200).json({
+      success: true,
+      bookmarked: true,
+      message: "Blog added to bookmarks",
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// BookmarkStatus 
+export const getBookmarkStatus = async (req, res) => {
+  try {
+    const { blogId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(blogId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Blog ID",
+      });
+    }
+
+    const blog = await Blog.findById(blogId).select("bookmarks");
+
+    if (!blog) {
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found",
+      });
+    }
+
+    const bookmarked = blog.bookmarks.some(
+      (userId) => userId.toString() === req.userId.toString()
+    );
+
+    return res.status(200).json({
+      success: true,
+      bookmarked,
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };

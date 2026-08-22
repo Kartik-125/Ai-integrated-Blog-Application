@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { assets} from '../assets/assets'
 import { useAppContext } from '../context/AppContext'
+import { BsBookmark, BsBookmarkFill } from "react-icons/bs";
 import toast from 'react-hot-toast'
 import Navbar from '../components/Navbar'
 import moment from 'moment'
@@ -15,11 +16,12 @@ const Blog = () => {
 
   const [data, setData] = useState(null)
   const [comments, setComments] = useState([])
+  const [isBookmarked, setIsBookmarked] = useState(false);
 
   
   const [content, setContent] =useState('')
 
-
+// Fetching blogs data
   const fetchBlogData = async () => {
   try {
     const { data } = await axios.get(`/blog/${id}`)
@@ -35,6 +37,7 @@ const Blog = () => {
   }
 }
 
+// fetching comments
   const fetchComments = async () => {
   try {
     const { data } = await axios.post("/blog/comments", {
@@ -52,7 +55,7 @@ const Blog = () => {
   }
 }
 
-
+// add comments
   const addComment = async (e) => {
     e.preventDefault()
 
@@ -82,10 +85,68 @@ const Blog = () => {
   };
 
   useEffect(() => {
-    fetchBlogData()
-    fetchComments()
-  }, [id])
+    fetchBlogData();
+    fetchComments();
+    fetchBookmarkStatus();
+  }, [id, userToken])
 
+// togglebookmark
+const toggleBookmark = async () => {
+  if (!userToken) {
+    toast.error("Please login to bookmark this blog");
+    return;
+  }
+
+  try {
+    const { data } = await axios.post(
+      "/blog/bookmark",
+      {
+        blogId: id,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      }
+    );
+
+    if (data.success) {
+      console.log("Bookmark response:", data);
+      setIsBookmarked(data.bookmarked);
+      toast.success(data.message);
+    } else {
+      toast.error(data.message);
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to update bookmark");
+  }
+};
+
+//  Bookmark Status
+const fetchBookmarkStatus = async () => {
+  if (!userToken) {
+    setIsBookmarked(false);
+    return;
+  }
+
+  try {
+    const { data } = await axios.get(
+      `/blog/bookmark-status/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      }
+    );
+
+    if (data.success) {
+      setIsBookmarked(data.bookmarked);
+    }
+  } catch (error) {
+    console.error("Failed to fetch bookmark status:", error);
+  }
+};
 
   return data ? (
 
@@ -104,6 +165,20 @@ const Blog = () => {
 
         <p className='inline-block py-1 px-4 rounded-full mb-6 border text-sm border-primary/35 bg-primary/5 font-medium text-primary'> {data.author?.name} </p>
 
+        <button
+          onClick={toggleBookmark}
+          className="ml-3 inline-flex items-center gap-2 py-2 px-4 rounded-full border border-gray-300 hover:bg-gray-100 transition"
+        >
+          {isBookmarked ? (
+            <BsBookmarkFill className="text-primary" />
+          ) : (
+            <BsBookmark />
+          )}
+
+          <span>
+            {isBookmarked ? "Bookmarked" : "Bookmark"}
+          </span>
+        </button>
       </div>
 
       <div className='mx-5 max-w-5xl md:mx-auto my-10 mt-6'>

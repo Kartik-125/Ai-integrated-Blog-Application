@@ -64,12 +64,12 @@ const MyBlogsTable = ({ blogs = [] }) => {
 
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <Link
+                    {blog.isPublished && (<Link
                       to={`/blog/${blog._id}`}
                       className="text-blue-600 hover:underline"
                     >
                       View
-                    </Link>
+                    </Link>)}
 
                     <Link
                       to={`/dashboard/edit-blog/${blog._id}`}

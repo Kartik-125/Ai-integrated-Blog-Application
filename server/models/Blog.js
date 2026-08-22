@@ -64,9 +64,18 @@ const blogSchema = new mongoose.Schema(
                 ref: "User",
             }
         ],
-        isPublished: {
-            type: Boolean,
-            default: false
+        // isPublished: {
+        //     type: Boolean,
+        //     default: false
+        // },
+        status: {
+            type: String,
+            enum: ["pending", "approved", "rejected"],
+            default: "pending"
+        },
+        rejectionReason: {
+            type: String,
+            default: ""
         }
     }, 
     {

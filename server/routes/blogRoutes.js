@@ -8,7 +8,10 @@ import {
     getBlogById,
     getBlogComments,
     togglePublish,
-    getMyBlogs
+    getMyBlogs,
+    toggleBookmark,
+    getBookmarkedBlogs,
+    getBookmarkStatus
 } from "../controllers/blogController.js";
 
 import upload from "../middleware/multer.js";
@@ -38,6 +41,14 @@ blogRouter.get(
     getMyBlogs
 );
 
+blogRouter.post(
+    "/bookmark",
+    userAuth,
+    toggleBookmark
+);
+
+
+
 // Admin
 blogRouter.post(
     "/delete",
@@ -53,6 +64,10 @@ blogRouter.post(
 
 // Public
 blogRouter.get("/all", getAllBlogs);
+
+blogRouter.get("/bookmarks", userAuth, getBookmarkedBlogs);
+
+blogRouter.get("/bookmark-status/:blogId", userAuth, getBookmarkStatus);
 
 blogRouter.get("/:blogId", getBlogById);
 

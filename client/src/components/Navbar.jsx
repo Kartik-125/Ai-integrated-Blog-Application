@@ -46,7 +46,7 @@ const Navbar = () => {
     <div className='flex justify-between items-center py-5 mx-8 sm:mx-20 xl:mx-32'>
         <img onClick={()=>navigate('/')} src={assets.logo} alt="logo" className='w-32 sm:w-44 cursor-pointer' />
         <div className="relative" ref={dropdownRef}>
-          {adminToken ? (
+          {adminToken && !userToken ? (
             <button
               onClick={() => navigate("/admin")}
               className="flex items-center gap-2 rounded-full bg-primary text-white px-6 py-2.5"
@@ -86,19 +86,31 @@ const Navbar = () => {
           {open && (
             <div className="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-lg border overflow-hidden z-50">
 
-              <button
+              <button 
+                onClick={()=>{
+                  navigate("/dashboard/profile");
+                  setOpen(false)
+                }}
                 className="w-full text-left px-5 py-3 hover:bg-gray-100"
               >
                 My Profile
               </button>
 
               <button
+                onClick={()=>{
+                  navigate("/dashboard/my-blogs");
+                  setOpen(false)
+                }}
                 className="w-full text-left px-5 py-3 hover:bg-gray-100"
               >
                 My Blogs
               </button>
 
               <button
+                onClick={()=>{
+                  navigate("/dashboard/bookmarks");
+                  setOpen(false)
+                }}
                 className="w-full text-left px-5 py-3 hover:bg-gray-100"
               >
                 Bookmarks

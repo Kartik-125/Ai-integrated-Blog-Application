@@ -24,6 +24,7 @@ import Login from "./components/admin/Login";
 import Userlayout from "./pages/user/Userlayout";
 import UserDashboard from "./pages/user/UserDashboard";
 import CreateBlog from "./pages/user/CreateBlog";
+import Bookmarks from "./pages/user/Bookmarks";
 import MyBlogs from "./pages/user/MyBlogs";
 import Profile from "./pages/user/Profile";
 import EditBlog from "./pages/user/EditBlog";
@@ -75,6 +76,8 @@ const App = () => {
         <Route path="my-blogs" element={<MyBlogs />} />
 
         <Route path="profile" element={<Profile />} />
+
+        <Route path="bookmarks" element={<Bookmarks />} />
 
         <Route path="edit-blog/:id" element={<EditBlog />} />
         
