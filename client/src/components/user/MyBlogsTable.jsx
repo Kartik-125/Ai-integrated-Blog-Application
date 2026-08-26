@@ -24,10 +24,12 @@ const MyBlogsTable = ({ blogs = [] }) => {
                 key={blog._id}
                 className="border-b last:border-b-0 hover:bg-gray-50"
               >
+                {/* Number */}
                 <td className="px-6 py-4">
                   {index + 1}
                 </td>
 
+                {/* Blog */}
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3 min-w-[220px]">
                     <img
@@ -48,35 +50,50 @@ const MyBlogsTable = ({ blogs = [] }) => {
                   </div>
                 </td>
 
+                {/* Category */}
                 <td className="px-6 py-4">
                   {blog.category}
                 </td>
 
+                {/* Views */}
                 <td className="px-6 py-4">
                   {blog.views}
                 </td>
 
+                {/* Status */}
                 <td className="px-6 py-4">
-                  <BlogStatusBadge
-                    isPublished={blog.isPublished}
-                  />
+                  <BlogStatusBadge status={blog.status} />
+
+                  {blog.status === "rejected" &&
+                    blog.rejectionReason && (
+                      <p className="text-xs text-red-500 mt-2 max-w-xs">
+                        Reason: {blog.rejectionReason}
+                      </p>
+                    )}
                 </td>
 
+                {/* Actions */}
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    {blog.isPublished && (<Link
-                      to={`/blog/${blog._id}`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      View
-                    </Link>)}
 
+                    {/* Only approved blogs can be publicly viewed */}
+                    {blog.status === "approved" && (
+                      <Link
+                        to={`/blog/${blog._id}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        View
+                      </Link>
+                    )}
+
+                    {/* User can edit pending/rejected/approved blogs */}
                     <Link
                       to={`/dashboard/edit-blog/${blog._id}`}
                       className="text-green-600 hover:underline"
                     >
                       Edit
                     </Link>
+
                   </div>
                 </td>
               </tr>

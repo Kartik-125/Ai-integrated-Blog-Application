@@ -60,13 +60,17 @@ const RecentBlogsTable = ({ blogs = [] }) => {
                 <td className="px-6 py-4">
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      blog.isPublished
+                      blog.status === "approved"
                         ? "bg-green-100 text-green-700"
+                        : blog.status === "rejected"
+                        ? "bg-red-100 text-red-700"
                         : "bg-yellow-100 text-yellow-700"
                     }`}
                   >
-                    {blog.isPublished
-                      ? "Published"
+                    {blog.status === "approved"
+                      ? "Approved"
+                      : blog.status === "rejected"
+                      ? "Rejected"
                       : "Pending Review"}
                   </span>
                 </td>

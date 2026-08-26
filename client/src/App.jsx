@@ -1,7 +1,5 @@
 import React from "react";
-import { Route, Routes } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { Route, Routes } from "react-router-dom"; 
 
 // Public Pages
 import Home from "./pages/Home";
@@ -16,6 +14,7 @@ import ResetPasswordPage from "./auth/pages/ResetPassword";
 // Admin Pages
 import Layout from "./pages/admin/Layout";
 import Dashboard from "./pages/admin/Dashboard";
+import AdminBlogReview from "./pages/admin/AdminBlogReview";
 import Comments from "./pages/admin/Comments";
 import ManageBlogs from "./pages/admin/ManageBlogs";
 import Login from "./components/admin/Login";
@@ -93,19 +92,10 @@ const App = () => {
       >
         <Route index element={<Dashboard />} />
         <Route path="manage-blogs" element={<ManageBlogs />} />
+        <Route path="blogs/:id" element={<AdminBlogReview />} />
         <Route path="comments" element={<Comments />} />
       </Route>
     </Routes>
-
-    <ToastContainer
-      position="top-right"
-      autoClose={3000}
-      hideProgressBar={false}
-      newestOnTop
-      closeOnClick
-      pauseOnHover
-      theme="light"
-    />
 
   </>  
     

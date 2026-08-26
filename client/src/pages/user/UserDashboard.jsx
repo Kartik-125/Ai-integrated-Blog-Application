@@ -50,11 +50,15 @@ const UserDashboard =()  => {
   const totalBlogs = blogs.length;
 
   const publishedBlogs = blogs.filter(
-    (blog) => blog.isPublished
+    (blog) => blog.status === "approved"
   ).length;
 
   const pendingBlogs = blogs.filter(
-    (blog) => !blog.isPublished
+    (blog) => blog.status === "pending"
+  ).length;
+
+  const rejectedBlogs = blogs.filter(
+    (blog) => blog.status === "rejected"
   ).length;
 
   const totalViews = blogs.reduce(

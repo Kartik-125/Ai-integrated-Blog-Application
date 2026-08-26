@@ -1,64 +1,44 @@
-import React from 'react'
+import React from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../../context/AppContext";
-import { assets } from '../../assets/assets.js';
+import { assets } from "../../assets/assets.js";
 
-const BlogTableItem = ({blog, fetchBlogs, index}) => {
-
+const BlogTableItem = ({ blog, fetchBlogs, index }) => {
   const { axios, adminToken } = useAppContext();
-  const{title, createdAt}= blog;
-  const BlogDate = new Date(createdAt)
+  const navigate = useNavigate();
 
-  const togglePublish = async () => {
-  try {
-    const { data } = await axios.post(
-      "/blog/toggle-publish",
-      {
-        id: blog._id,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${adminToken}`,
-        },
-      }
+  const BlogDate = blog.createdAt
+    ? new Date(blog.createdAt)
+    : null;
+
+  // =========================
+  // Delete Blog
+  // =========================
+  const deleteBlog = async () => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this blog?"
     );
 
-    if (data.success) {
-      toast.success(data.message);
-      fetchBlogs();
-    } else {
-      toast.error(data.message);
-    }
-  } catch (error) {
-    console.error(error);
-    toast.error("Something went wrong");
-  }
-};
+    if (!confirmDelete) return;
 
-const deleteBlog = async () => {
-  
-  const confirmDelete = window.confirm(
-    "Are you sure you want to delete this blog?"
-  );
-
-  if (!confirmDelete) return;
-
-  try {
-    const { data } = await axios.post(
-      "/blog/delete",
-      {
-        blogId: blog._id,
-      },
-      {
-        headers: {
-        Authorization: `Bearer ${adminToken}`,
+    try {
+      const { data } = await axios.post(
+        "/blog/delete",
+        {
+          blogId: blog._id,
         },
-      }
-    );
-    if (data.success) {
-      toast.success(data.message);
-      fetchBlogs();
-    } else {
+        {
+          headers: {
+            Authorization: `Bearer ${adminToken}`,
+          },
+        }
+      );
+
+      if (data.success) {
+        toast.success(data.message);
+        fetchBlogs();
+      } else {
         toast.error(data.message);
       }
     } catch (error) {
@@ -67,23 +47,105 @@ const deleteBlog = async () => {
     }
   };
 
-  return (
-    <tr className='border-y border-gray-300'>
-      <th className='px-2 py-4'>{index}</th>
-      <td className='px-2 py-4'>{title}</td>
-      <td className='px-2 py-4 max-sm:hidden'>{createdAt ? BlogDate.toDateString(): '-'}</td>
-      <td className='px-2 py-4 max-sm:hidden'>
-        <p className={blog.isPublished ? "text-green-600" : "text-orange-700"}>
-            {blog.isPublished ? 'Published' : 'Unpublished'}</p>
-      </td>
-      <td className='px-2 py-4 flex text-xs gap-3'>
-        <button onClick={togglePublish} className='border px-2 py-0.5 mt-1 rounded cursor-pointer'>
-          {blog.isPublished ? 'UnPublish' : 'Publish'}
-        </button>
-        <img onClick={deleteBlog} src={assets.cross_icon} alt="" className='w-8 hover:scale-110 transition-all cursor-pointer' />
-      </td>
-    </tr>
-  )
-}
+  // =========================
+  // Status Badge
+  // =========================
+  const getStatusStyle = () => {
+    if (blog.status === "approved") {
+      return "bg-green-100 text-green-700";
+    }
 
-export default BlogTableItem
+    if (blog.status === "rejected") {
+      return "bg-red-100 text-red-700";
+    }
+
+    return "bg-yellow-100 text-yellow-700";
+  };
+
+  const getStatusText = () => {
+    if (blog.status === "approved") {
+      return "Approved";
+    }
+
+    if (blog.status === "rejected") {
+      return "Rejected";
+    }
+
+    return "Pending Review";
+  };
+
+  return (
+    <tr className="border-y border-gray-300">
+
+      {/* Index */}
+      <th className="px-2 py-4">
+        {index}
+      </th>
+
+      {/* Blog */}
+      <td className="px-2 py-4">
+        <div className="flex items-center gap-3">
+
+          {blog.image && (
+            <img
+              src={blog.image}
+              alt={blog.title}
+              className="w-12 h-10 object-cover rounded"
+            />
+          )}
+
+          <span className="font-medium">
+            {blog.title}
+          </span>
+
+        </div>
+      </td>
+
+      {/* Date */}
+      <td className="px-2 py-4 max-sm:hidden">
+        {BlogDate
+          ? BlogDate.toDateString()
+          : "-"}
+      </td>
+
+      {/* Status */}
+      <td className="px-2 py-4">
+        <span
+          className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusStyle()}`}
+        >
+          {getStatusText()}
+        </span>
+      </td>
+
+      {/* Actions */}
+      <td className="px-2 py-4">
+
+        <div className="flex items-center gap-3">
+
+          {/* Read */}
+          <button
+            onClick={() =>
+              navigate(`/admin/blogs/${blog._id}`)
+            }
+            className="border border-blue-500 text-blue-600 px-3 py-1 rounded hover:bg-blue-50"
+          >
+            Read
+          </button>
+
+          {/* Delete */}
+          <img
+            onClick={deleteBlog}
+            src={assets.cross_icon}
+            alt="Delete"
+            className="w-7 hover:scale-110 transition-all cursor-pointer"
+          />
+
+        </div>
+
+      </td>
+
+    </tr>
+  );
+};
+
+export default BlogTableItem;

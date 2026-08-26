@@ -7,7 +7,7 @@ import {
     getAllBlogs,
     getBlogById,
     getBlogComments,
-    togglePublish,
+    // togglePublish,
     getMyBlogs,
     toggleBookmark,
     getBookmarkedBlogs,
@@ -56,11 +56,11 @@ blogRouter.post(
     deleteBlogById
 );
 
-blogRouter.post(
-    "/toggle-publish",
-    authAdmin,
-    togglePublish
-);
+// blogRouter.post(
+//     "/toggle-publish",
+//     authAdmin,
+//     togglePublish
+// );
 
 // Public
 blogRouter.get("/all", getAllBlogs);

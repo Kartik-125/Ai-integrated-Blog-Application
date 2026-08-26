@@ -311,42 +311,42 @@ export const deleteBlogById = async (req, res) => {
 // =========================
 // Publish / Unpublish Blog
 // =========================
-export const togglePublish = async (req, res) => {
-  try {
-    const { id } = req.body;
+// export const togglePublish = async (req, res) => {
+//   try {
+//     const { id } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid Blog ID",
-      });
-    }
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid Blog ID",
+//       });
+//     }
 
-    const blog = await Blog.findById(id);
+//     const blog = await Blog.findById(id);
 
-    if (!blog) {
-      return res.status(404).json({
-        success: false,
-        message: "Blog not found",
-      });
-    }
+//     if (!blog) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Blog not found",
+//       });
+//     }
 
-    blog.isPublished = !blog.isPublished;
+//     blog.isPublished = !blog.isPublished;
 
-    await blog.save();
+//     await blog.save();
 
-    return res.status(200).json({
-      success: true,
-      message: "Blog status updated",
-      isPublished: blog.isPublished,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+//     return res.status(200).json({
+//       success: true,
+//       message: "Blog status updated",
+//       isPublished: blog.isPublished,
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
 
 // =========================
 // Add Comment
@@ -364,7 +364,7 @@ export const addComment = async (req, res) => {
 
     const blogExists = await Blog.findById(blog);
 
-    if (!blogExists || !blogExists.status !== "approved") {
+    if (!blogExists || blogExists.status !== "approved") {
       return res.status(404).json({
         success: false,
         message: "Blog not found",
