@@ -13,6 +13,8 @@ const AdminBlogReview = () => {
   const [loading, setLoading] = useState(true);
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
+  const [aiReview, setAiReview] = useState(null);
+  const [runningAI, setRunningAI] = useState(false);
 
   const fetchBlog = async () => {
     try {
@@ -40,6 +42,49 @@ const AdminBlogReview = () => {
       fetchBlog();
     }
   }, [id, adminToken]);
+
+  const runAICheck = async () => {
+    setRunningAI(true);
+    setAiReview(null);
+
+    try {
+      const { data } = await axios.post(
+        "/ai/review-blog",
+        {
+          title: blog.title,
+          excerpt: blog.excerpt,
+          content: blog.content,
+          category: blog.category,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${adminToken}`,
+          },
+        }
+      );
+
+      if (data.success) {
+        setAiReview(data.review);
+
+        if (
+          data.review.verdict === "flag" &&
+          data.review.issues?.length > 0
+        ) {
+          setReason(data.review.issues.map((issue) => `- ${issue}`).join("\n"));
+          setRejecting(true);
+        }
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        error?.response?.data?.message || "Failed to run AI check"
+      );
+    } finally {
+      setRunningAI(false);
+    }
+  };
 
   const approveBlog = async () => {
     try {
@@ -234,6 +279,63 @@ const AdminBlogReview = () => {
               <p className="text-sm text-red-600 mt-1">
                 {blog.rejectionReason}
               </p>
+            </div>
+          )}
+
+          {/* AI Pre-check */}
+          {blog.status === "pending" && (
+            <div className="mt-10 pt-6 border-t">
+              <div className="flex items-center justify-between mb-3">
+                <p className="font-medium text-gray-700">AI pre-check</p>
+
+                <button
+                  onClick={runAICheck}
+                  disabled={runningAI}
+                  className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {runningAI ? "Checking..." : "Run AI Check"}
+                </button>
+              </div>
+
+              {aiReview && (
+                <div
+                  className={`p-4 rounded-lg border ${
+                    aiReview.verdict === "flag"
+                      ? "bg-yellow-50 border-yellow-200"
+                      : "bg-green-50 border-green-200"
+                  }`}
+                >
+                  <p
+                    className={`font-semibold ${
+                      aiReview.verdict === "flag"
+                        ? "text-yellow-700"
+                        : "text-green-700"
+                    }`}
+                  >
+                    {aiReview.verdict === "flag"
+                      ? "Possible issues found"
+                      : "No issues found"}
+                  </p>
+
+                  {aiReview.issues?.length > 0 && (
+                    <ul className="list-disc list-inside text-sm text-gray-700 mt-2 space-y-1">
+                      {aiReview.issues.map((issue, i) => (
+                        <li key={i}>{issue}</li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {aiReview.reasoning && (
+                    <p className="text-sm text-gray-500 mt-2">
+                      {aiReview.reasoning}
+                    </p>
+                  )}
+
+                  <p className="text-xs text-gray-400 mt-3">
+                    This is a suggestion, not a decision — you still choose whether to approve or reject.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

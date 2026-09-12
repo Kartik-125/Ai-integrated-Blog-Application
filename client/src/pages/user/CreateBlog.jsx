@@ -21,6 +21,7 @@ const CreateBlog = () => {
   const [excerpt,setExcerpt]= useState('');
   
   const [category,setCategory]= useState('');
+  const [generatingAI, setGeneratingAI] = useState(false);
 
   const onSubmitHandler = async (e) => {
   e.preventDefault();
@@ -87,7 +88,41 @@ const CreateBlog = () => {
       quillRef.current = new Quill(editorRef.current, {theme: 'snow'})
     }
   },[])
-  const generateContent  = async (e)=>{
+  const generateContent = async () => {
+    if (!title.trim()) {
+      toast.error("Add a title first so AI knows what to write about.");
+      return;
+    }
+
+    if (!quillRef.current) return;
+
+    setGeneratingAI(true);
+
+    try {
+      const { data } = await axios.post(
+        "/ai/generate-content",
+        { title, category, excerpt },
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+        }
+      );
+
+      if (data.success) {
+        quillRef.current.root.innerHTML = data.content;
+        toast.success("Draft generated — give it a read and edit as needed.");
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        error?.response?.data?.message || "Failed to generate content"
+      );
+    } finally {
+      setGeneratingAI(false);
+    }
   }
 
   return (
@@ -136,8 +171,9 @@ const CreateBlog = () => {
           <button 
             type='button' 
             onClick={generateContent} 
-            className='absolute bottom-1 right-2 ml-2 text-xs text-white bg-black/70 px-4 py-1.5 rounded hover:underline cursor-pointer'>
-              Generate with AI
+            disabled={generatingAI}
+            className='absolute bottom-1 right-2 ml-2 text-xs text-white bg-black/70 px-4 py-1.5 rounded hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'>
+              {generatingAI ? 'Generating...' : 'Generate with AI'}
           </button>
         </div>
 
