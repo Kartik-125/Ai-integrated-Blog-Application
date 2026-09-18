@@ -3,121 +3,102 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import crypto from "crypto";
+import { asyncHandler, ApiError } from "../utils/asyncHandler.js";
 
 // Register User
-export const registerUser = async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
+export const registerUser = asyncHandler(async (req, res) => {
+  const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
-      return res.json({
-        success: false,
-        message: "Missing required fields",
-      });
-    }
-
-    const existingUser = await User.findOne({ email });
-
-    if (existingUser) {
-      return res.json({
-        success: false,
-        message: "User already exists",
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-    });
-
-    const token = jwt.sign(
-      {
-        id: user._id,
-        type: "user"
-      },
-      process.env.USER_JWT_SECRET,
-      {
-        expiresIn: "7d",
-      }
-    );
-
-    res.json({
-      success: true,
-      message: "Account created successfully",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
-    });
-  } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+  if (!name || !email || !password) {
+    throw new ApiError(400, "Missing required fields");
   }
-};
+
+  const existingUser = await User.findOne({ email });
+
+  if (existingUser) {
+    throw new ApiError(409, "User already exists");
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const user = await User.create({
+    name,
+    email,
+    password: hashedPassword,
+  });
+
+  const token = jwt.sign(
+    {
+      id: user._id,
+      type: "user",
+    },
+    process.env.USER_JWT_SECRET,
+    {
+      expiresIn: "7d",
+    }
+  );
+
+  return res.json({
+    success: true,
+    message: "Account created successfully",
+    token,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+    },
+  });
+});
 
 // Get User Profile
-export const getUserProfile = async (req, res) => {
-  try {
-    res.json({
-      success: true,
-      user: req.user,
-    });
-  } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+export const getUserProfile = asyncHandler(async (req, res) => {
+  return res.json({
+    success: true,
+    user: req.user,
+  });
+});
 
 // Forgot Password
-export const forgotPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
 
-    if (!email) {
-      return res.json({
-        success: false,
-        message: "Email is required",
-      });
-    }
+  if (!email) {
+    throw new ApiError(400, "Email is required");
+  }
 
-    const user = await User.findOne({ email });
+  const user = await User.findOne({ email });
 
-    if (!user) {
-      return res.json({
-        success: true,
-        message: "If an account with this email exists, a password reset email has been sent.",
-      });
-    }
+  // Deliberately NOT an error — always returning success here (whether
+  // or not the email exists) prevents this endpoint from being used to
+  // check which emails are registered.
+  if (!user) {
+    return res.json({
+      success: true,
+      message:
+        "If an account with this email exists, a password reset email has been sent.",
+    });
+  }
 
-    // Generate reset token
-    const resetToken = crypto.randomBytes(32).toString("hex");
+  // Generate reset token
+  const resetToken = crypto.randomBytes(32).toString("hex");
 
-    // Hash token before saving in MongoDB
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(resetToken)
-      .digest("hex");
+  // Hash token before saving in MongoDB
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
 
-    user.resetPasswordToken = hashedToken;
+  user.resetPasswordToken = hashedToken;
 
-    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
+  user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
 
-    await user.save();
-    const resetLink = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+  await user.save();
+  const resetLink = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
-    const emailSent = await sendEmail({
-      to: user.email,
-      subject: "Reset your Daily Reads password",
-      html: `
+  const emailSent = await sendEmail({
+    to: user.email,
+    subject: "Reset your Daily Reads password",
+    html: `
         <h2>Password Reset</h2>
 
         <p>Hello ${user.name},</p>
@@ -134,149 +115,100 @@ export const forgotPassword = async (req, res) => {
 
         <p>If you didn't request this, ignore this email.</p>
       `,
-    });
+  });
 
-    if (!emailSent) {
-      return res.json({
-        success: false,
-        message: "Failed to send reset email",
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "Password reset email sent successfully",
-    });
-
-  } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+  if (!emailSent) {
+    throw new ApiError(502, "Failed to send reset email");
   }
-};
+
+  return res.json({
+    success: true,
+    message: "Password reset email sent successfully",
+  });
+});
 
 // Login User
-export const loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+export const loginUser = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.json({
-        success: false,
-        message: "Missing required fields",
-      });
-    }
-
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid credentials",
-      });
-    }
-
-    const isPasswordCorrect = await bcrypt.compare(
-      password,
-      user.password
-    );
-
-    if (!isPasswordCorrect) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid credentials",
-      });
-    }
-
-    const token = jwt.sign(
-      {
-        id: user._id,
-        type: "user"
-      },
-      process.env.USER_JWT_SECRET,
-      {
-        expiresIn: "7d",
-      }
-    );
-
-    res.json({
-      success: true,
-      message: "Login successful",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
-    });
-  } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+  if (!email || !password) {
+    throw new ApiError(400, "Missing required fields");
   }
-};
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new ApiError(401, "Invalid credentials");
+  }
+
+  const isPasswordCorrect = await bcrypt.compare(password, user.password);
+
+  if (!isPasswordCorrect) {
+    throw new ApiError(401, "Invalid credentials");
+  }
+
+  const token = jwt.sign(
+    {
+      id: user._id,
+      type: "user",
+    },
+    process.env.USER_JWT_SECRET,
+    {
+      expiresIn: "7d",
+    }
+  );
+
+  return res.json({
+    success: true,
+    message: "Login successful",
+    token,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+    },
+  });
+});
 
 // Reset Password
-export const resetPassword = async (req, res) => {
-  try {
-    const { token } = req.params;
-    const { password } = req.body;
+export const resetPassword = asyncHandler(async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
 
-    if (!token || !password) {
-      return res.json({
-        success: false,
-        message: "Token and new password are required",
-      });
-    }
-
-    // Hash token received from reset link
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(token)
-      .digest("hex");
-
-    // Find user with valid, non-expired token
-    const user = await User.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordExpires: {
-        $gt: Date.now(),
-      },
-    });
-
-    if (!user) {
-      return res.json({
-        success: false,
-        message: "Invalid or expired reset token",
-      });
-    }
-    if (password.length < 6) {
-      return res.json(
-        {
-        success: false,
-        message: "Password must be at least 6 characters",
-        }
-      );
-    }
-
-    // Hash new password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    user.password = hashedPassword;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
-
-    await user.save();
-
-    res.json({
-      success: true,
-      message: "Password reset successfully",
-    });
-  } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+  if (!token || !password) {
+    throw new ApiError(400, "Token and new password are required");
   }
-};
+
+  // Hash token received from reset link
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+  // Find user with valid, non-expired token
+  const user = await User.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpires: {
+      $gt: Date.now(),
+    },
+  });
+
+  if (!user) {
+    throw new ApiError(400, "Invalid or expired reset token");
+  }
+
+  if (password.length < 6) {
+    throw new ApiError(400, "Password must be at least 6 characters");
+  }
+
+  // Hash new password
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  user.password = hashedPassword;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpires = undefined;
+
+  await user.save();
+
+  return res.json({
+    success: true,
+    message: "Password reset successfully",
+  });
+});

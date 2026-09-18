@@ -6,6 +6,7 @@ import adminRouter from './routes/adminRoutes.js';
 import blogRouter from './routes/blogRoutes.js';
 import userRouter from "./routes/userRoutes.js";
 import aiRouter from "./routes/aiRoutes.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
 
 const app = express();
@@ -13,7 +14,7 @@ const app = express();
 await connectDB()
 
 //Middlewares
-app.use(cors())
+app.use(cors({ origin: process.env.CLIENT_URL }))
 app.use(express.json())
 
 //Route
@@ -22,6 +23,10 @@ app.use('/api/admin', adminRouter)
 app.use('/api/blog', blogRouter)
 app.use("/api/user", userRouter);
 app.use("/api/ai", aiRouter);
+
+// Central error handler — must come AFTER all routes, so that any
+// error passed to next() from a controller lands here.
+app.use(errorHandler);
 
 // port on which server runs
 const PORT = process.env.PORT || 3000;

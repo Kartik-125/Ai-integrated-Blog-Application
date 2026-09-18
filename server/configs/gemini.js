@@ -11,6 +11,12 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 // daily cap on the free tier.
 const MODEL = "gemini-3.5-flash-lite";
 
+// gemini-embedding-001 is the current text embedding model, and (unlike
+// the fast-moving generation models above) hasn't been churning names —
+// but worth a quick check if this ever throws a 404 the way
+// gemini-2.5-flash-lite did.
+const EMBEDDING_MODEL = "gemini-embedding-001";
+
 export const generateBlogContent = async ({ title, category, excerpt }) => {
   const prompt = `You are a blog writing assistant for a blogging platform called DailyReads.
 
@@ -92,6 +98,54 @@ Do NOT flag a post merely for a casual tone, minor typos, an opinion you persona
 
     return JSON.parse(cleaned);
   }
+};
+
+// Gemini's embedding model needs to know whether the text you're
+// embedding is a document you're storing for later search, or a query
+// you're searching WITH — it produces slightly different vectors for
+// each. Pass "RETRIEVAL_DOCUMENT" when embedding blog chunks to store,
+// and "RETRIEVAL_QUERY" when embedding a visitor's question to search
+// with — we'll use both in later steps.
+export const embedText = async (text, taskType = "RETRIEVAL_DOCUMENT") => {
+  const response = await ai.models.embedContent({
+    model: EMBEDDING_MODEL,
+    contents: text,
+    config: { taskType },
+  });
+
+  return response.embeddings[0].values;
+};
+
+// =========================
+// Answer Generation (Ask DailyReads)
+// =========================
+// Takes the chunks retrieved by searchChunks and asks Gemini to answer
+// using ONLY that text — this is the "grounding" instruction that
+// keeps the chatbot from making things up.
+export const answerFromContext = async ({ question, contextChunks }) => {
+  const context = contextChunks
+    .map((chunk, i) => `[${i + 1}] ${chunk.text}`)
+    .join("\n\n");
+
+  const prompt = `You are "Ask DailyReads," a chatbot answering visitor questions using excerpts from DailyReads blog posts as your ONLY source of truth.
+
+Context excerpts:
+${context}
+
+Question: ${question}
+
+Rules:
+- Answer using ONLY the information in the context excerpts above.
+- If the excerpts don't contain enough information to answer, say so plainly instead of guessing or using outside knowledge.
+- Keep the answer conversational and concise (a few sentences, not an essay).
+- Don't mention "excerpts," "context," or the [1]-style numbers in your answer text — just answer naturally.`;
+
+  const response = await ai.models.generateContent({
+    model: MODEL,
+    contents: prompt,
+  });
+
+  return (response.text || "").trim();
 };
 
 export default ai;

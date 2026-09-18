@@ -28,6 +28,9 @@ import MyBlogs from "./pages/user/MyBlogs";
 import Profile from "./pages/user/Profile";
 import EditBlog from "./pages/user/EditBlog";
 
+// AI Chat Widget
+import AskDailyReads from "./components/user/AskDailyReads";
+
 // Context
 import { useAppContext } from "./context/AppContext";
 
@@ -96,6 +99,8 @@ const App = () => {
         <Route path="comments" element={<Comments />} />
       </Route>
     </Routes>
+
+    <AskDailyReads />
 
   </>  
     
