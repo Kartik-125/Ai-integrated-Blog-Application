@@ -17,6 +17,8 @@ import {
 import upload from "../middleware/multer.js";
 import authAdmin from "../middleware/authAdmin.js";
 import userAuth from "../middleware/userAuth.js";
+import { validate } from "../middleware/validate.js";
+import { commentSchema, getAllBlogsQuerySchema } from "../validation/schemas.js";
 
 const blogRouter = express.Router();
 
@@ -63,7 +65,7 @@ blogRouter.post(
 // );
 
 // Public
-blogRouter.get("/all", getAllBlogs);
+blogRouter.get("/all", validate(getAllBlogsQuerySchema, "query"), getAllBlogs);
 
 blogRouter.get("/bookmarks", userAuth, getBookmarkedBlogs);
 
@@ -74,6 +76,7 @@ blogRouter.get("/:blogId", getBlogById);
 blogRouter.post(
     "/comment",
     userAuth,
+    validate(commentSchema),
     addComment
 );
 

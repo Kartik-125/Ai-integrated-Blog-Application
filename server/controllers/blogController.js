@@ -2,8 +2,14 @@ import fs from "fs";
 import imagekit from "../configs/imageKit.js";
 import Blog from "../models/Blog.js";
 import Comment from "../models/Comment.js";
+import User from "../models/User.js";
 import mongoose from "mongoose";
 import { asyncHandler, ApiError } from "../utils/asyncHandler.js";
+
+// Escapes regex special characters in user-supplied search text, so a
+// search for something like "a+b (c)" doesn't get interpreted as regex
+// syntax — either crashing the query or matching in unintended ways.
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // =========================
 // Create Blog
@@ -134,20 +140,64 @@ export const updateBlog = asyncHandler(async (req, res) => {
 });
 
 // =========================
-// Get All Published Blogs
+// Get All Published Blogs (paginated, with search + category filter)
 // =========================
 export const getAllBlogs = asyncHandler(async (req, res) => {
-  const blogs = await Blog.find({
-    status: "approved",
-  })
-    .populate("author", "name")
-    .sort({
-      createdAt: -1,
-    });
+  // Populated by validate(getAllBlogsQuerySchema, "query") on the
+  // route — already coerced to numbers, defaulted, and clamped there
+  // (limit capped at 50), so no manual parseInt/Math.max needed here.
+  const { page, limit, category, search } = req.validatedQuery;
+
+  const query = { status: "approved" };
+
+  if (category && category !== "All") {
+    query.category = category;
+  }
+
+  if (search) {
+    const searchRegex = new RegExp(escapeRegex(search), "i");
+
+    // Author name lives on the User collection, not Blog, so it needs
+    // its own lookup first — a regex can't reach across a $ref like
+    // this directly the way it can for the Blog's own text fields.
+    const matchingAuthors = await User.find({ name: searchRegex }).select(
+      "_id"
+    );
+
+    query.$or = [
+      { title: searchRegex },
+      { excerpt: searchRegex },
+      { content: searchRegex },
+      { category: searchRegex },
+      ...(matchingAuthors.length > 0
+        ? [{ author: { $in: matchingAuthors.map((u) => u._id) } }]
+        : []),
+    ];
+  }
+
+  const skip = (page - 1) * limit;
+
+  // Run the page of results and the total count in parallel — they're
+  // independent queries, no reason to wait for one before starting the
+  // other.
+  const [blogs, totalBlogs] = await Promise.all([
+    Blog.find(query)
+      .populate("author", "name")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Blog.countDocuments(query),
+  ]);
 
   return res.status(200).json({
     success: true,
     blogs,
+    pagination: {
+      page,
+      limit,
+      totalBlogs,
+      totalPages: Math.max(1, Math.ceil(totalBlogs / limit)),
+    },
   });
 });
 

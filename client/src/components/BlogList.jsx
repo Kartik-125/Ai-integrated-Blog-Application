@@ -1,55 +1,71 @@
 import { blogCategories } from "../assets/assets";
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion"
 import BlogCard from './BlogCard'
 
-const BlogList = ({search}) => {
+const BlogList = ({ search }) => {
 
   const { axios } = useAppContext();
 
   const [blogs, setBlogs] = useState([]);
   const [menu, setMenu] = useState('All');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
 
-  const fetchBlogs = async () => {
-  try {
-    const { data } = await axios.get("/blog/all");
+  // Tracks the category/search values from the last completed fetch,
+  // so this effect can tell "the filters changed" apart from "just the
+  // page changed" without needing two separate effects that could each
+  // fire their own network request for the same change.
+  const filtersRef = useRef({ menu, search });
 
-    if (data.success) {
-      setBlogs(data.blogs);
-    } else {
-      toast.error(data.message);
+  const fetchBlogs = async (pageToFetch) => {
+    setLoading(true);
+
+    try {
+      const { data } = await axios.get("/blog/all", {
+        params: {
+          page: pageToFetch,
+          category: menu,
+          search,
+        },
+      });
+
+      if (data.success) {
+        setBlogs(data.blogs);
+        setTotalPages(data.pagination.totalPages);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch blogs");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error(error);
-    toast.error("Failed to fetch blogs");
-  }
-};
+  };
 
-useEffect(() => {
-  fetchBlogs();
-}, []);
+  useEffect(() => {
+    const filtersChanged =
+      filtersRef.current.menu !== menu || filtersRef.current.search !== search;
 
-const filteredBlogs = blogs.filter((blog) => {
-  const matchesCategory =
-    menu === "All" || blog.category === menu;
+    filtersRef.current = { menu, search };
 
-  const searchText = (search || "").toLowerCase();
+    // Switching category or search should always jump back to page 1.
+    // If we're not already there, just update page and let this same
+    // effect run again (page is in the dependency list below) — that
+    // avoids firing two requests in a row for one filter change: one
+    // with the stale page, then a second one correcting it.
+    if (filtersChanged && page !== 1) {
+      setPage(1);
+      return;
+    }
 
-  const plainContent = blog.content
-    ?.replace(/<[^>]*>/g, "")
-    .toLowerCase();
-
-  const matchesSearch =
-    blog.title?.toLowerCase().includes(searchText) ||
-    blog.excerpt?.toLowerCase().includes(searchText) ||
-    blog.category?.toLowerCase().includes(searchText) ||
-    blog.author?.name?.toLowerCase().includes(searchText) ||
-    plainContent?.includes(searchText);
-
-  return matchesCategory && matchesSearch;
-});
+    fetchBlogs(filtersChanged ? 1 : page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, menu, search]);
 
   return (
     <div>
@@ -66,15 +82,45 @@ const filteredBlogs = blogs.filter((blog) => {
         ))}
 
       </div>
-      <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8 mb-24 mx-8 sm:mx-16 xl:mx-40'>
-        {filteredBlogs.map((blog)=>(
+
+      <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8 mb-8 mx-8 sm:mx-16 xl:mx-40'>
+        {blogs.map((blog)=>(
           <BlogCard key={blog._id} blog={blog}/>
         ))}
       </div>
-      {filteredBlogs.length === 0 && (
+
+      {loading && (
+        <p className="text-center text-gray-500 mb-20">Loading...</p>
+      )}
+
+      {!loading && blogs.length === 0 && (
         <p className="text-center text-gray-500 mb-20">
           No blogs found
         </p>
+      )}
+
+      {!loading && totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4 mb-24">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 text-sm border border-gray-300 rounded disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
+            Previous
+          </button>
+
+          <span className="text-sm text-gray-500">
+            Page {page} of {totalPages}
+          </span>
+
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="px-4 py-2 text-sm border border-gray-300 rounded disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
+            Next
+          </button>
+        </div>
       )}
     </div>
   )

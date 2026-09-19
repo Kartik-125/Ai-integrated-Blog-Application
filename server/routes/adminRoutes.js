@@ -11,10 +11,12 @@ import {
     getBlogByIdAdmin, 
     } from '../controllers/adminController.js';
 import authAdmin from '../middleware/authAdmin.js';
+import { validate } from '../middleware/validate.js';
+import { adminLoginSchema, rejectBlogSchema } from '../validation/schemas.js';
 
 const adminRouter = express.Router();
 
-adminRouter.post("/login" , adminLogin);
+adminRouter.post("/login", validate(adminLoginSchema), adminLogin);
 
 adminRouter.get("/blogs", authAdmin, getAllBlogsAdmin);
 
@@ -22,7 +24,7 @@ adminRouter.get("/blogs/:id", authAdmin, getBlogByIdAdmin);
 
 adminRouter.post("/approve-blog", authAdmin, approveBlog);
 
-adminRouter.post("/reject-blog", authAdmin, rejectBlog);
+adminRouter.post("/reject-blog", authAdmin, validate(rejectBlogSchema), rejectBlog);
 
 adminRouter.get("/comments", authAdmin, getAllComments);
 

@@ -42,6 +42,21 @@ export const errorHandler = (err, req, res, next) => {
     });
   }
 
+  // Multer: upload rejected — either fileFilter turned it down (that
+  // path throws an ApiError directly, handled above) or a built-in
+  // limit was hit, like fileSize. err.code identifies which one.
+  if (err.name === "MulterError") {
+    const message =
+      err.code === "LIMIT_FILE_SIZE"
+        ? "Image is too large (max 5MB)"
+        : "Image upload failed";
+
+    return res.status(400).json({
+      success: false,
+      message,
+    });
+  }
+
   // Anything unexpected. Don't leak internals to the client — the real
   // error is already in the server log above.
   return res.status(500).json({

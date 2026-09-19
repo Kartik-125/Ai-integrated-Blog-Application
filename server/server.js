@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
 import connectDB from './configs/db.js';
 import adminRouter from './routes/adminRoutes.js';
 import blogRouter from './routes/blogRoutes.js';
@@ -14,6 +15,7 @@ const app = express();
 await connectDB()
 
 //Middlewares
+app.use(helmet())
 app.use(cors({ origin: process.env.CLIENT_URL }))
 app.use(express.json())
 
