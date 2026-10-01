@@ -8,12 +8,11 @@ import { asyncHandler, ApiError } from '../utils/asyncHandler.js';
 // =========================
 // ADMIN LOGIN
 // =========================
-// NOTE: kept as a plain success:false response here rather than
-// `throw new ApiError(...)`. The admin Login.jsx component's catch
-// block only shows a generic toast — it doesn't read
-// error.response.data.message the way AdminBlogReview.jsx does — so
-// throwing would silently downgrade "Invalid Credentials" into
-// "Something went wrong". This stays as-is on purpose.
+// Previously kept as a plain success:false 200 response here, because
+// Login.jsx's catch block didn't read error.response.data.message —
+// throwing would have silently downgraded "Invalid Credentials" into
+// "Something went wrong". That frontend bug is now fixed, so this
+// matches loginUser's pattern: a proper 401 via ApiError.
 export const adminLogin = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -21,10 +20,7 @@ export const adminLogin = asyncHandler(async (req, res) => {
     email !== process.env.ADMIN_EMAIL ||
     password !== process.env.ADMIN_PASSWORD
   ) {
-    return res.json({
-      success: false,
-      message: "Invaild Credentials",
-    });
+    throw new ApiError(401, "Invalid credentials");
   }
 
   const token = jwt.sign(

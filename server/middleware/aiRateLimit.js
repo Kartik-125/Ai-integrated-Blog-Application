@@ -9,8 +9,14 @@ import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 // restarts and aren't shared across multiple instances. Fine for a
 // single-server setup; a Redis store would be the upgrade path if this
 // ever runs on more than one node.
-const buildLimiter = ({ windowMs, limit, message }) =>
-  rateLimit({
+const isTestEnv = process.env.NODE_ENV === "test";
+
+const buildLimiter = ({ windowMs, limit, message }) => {
+  if (isTestEnv) {
+    return (req, res, next) => next();
+  }
+
+  return rateLimit({
     windowMs,
     limit,
     standardHeaders: "draft-8",
@@ -35,6 +41,7 @@ const buildLimiter = ({ windowMs, limit, message }) =>
         message,
       }),
   });
+};
 
 // Drafting a blog post is a deliberate, occasional action.
 export const generateLimiter = buildLimiter({

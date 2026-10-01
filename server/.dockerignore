@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+
+# Never bake secrets into an image — env vars get passed in at
+# `docker run` time instead (via -e flags, an --env-file, or
+# docker-compose's "environment:"/"env_file:" keys).
+.env
+.env.*
+
+.git
+.gitignore
+README.md

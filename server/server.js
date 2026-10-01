@@ -1,41 +1,17 @@
 import 'dotenv/config'
-import express from 'express'
-import cors from 'cors'
-import helmet from 'helmet'
 import connectDB from './configs/db.js';
-import adminRouter from './routes/adminRoutes.js';
-import blogRouter from './routes/blogRoutes.js';
-import userRouter from "./routes/userRoutes.js";
-import aiRouter from "./routes/aiRoutes.js";
-import { errorHandler } from "./middleware/errorHandler.js";
+import app from './app.js';
 
-
-const app = express();
+// The actual "start this thing for real" entrypoint. Anything with a
+// side effect — connecting to the real database, binding a real port —
+// lives here, not in app.js, so that importing app.js on its own (as
+// tests do) never triggers any of it.
 
 await connectDB()
-
-//Middlewares
-app.use(helmet())
-app.use(cors({ origin: process.env.CLIENT_URL }))
-app.use(express.json())
-
-//Route
-app.get('/',(req,res)=> res.send("API is Working"))
-app.use('/api/admin', adminRouter)
-app.use('/api/blog', blogRouter)
-app.use("/api/user", userRouter);
-app.use("/api/ai", aiRouter);
-
-// Central error handler — must come AFTER all routes, so that any
-// error passed to next() from a controller lands here.
-app.use(errorHandler);
 
 // port on which server runs
 const PORT = process.env.PORT || 3000;
 
-
 app.listen(PORT,()=>{
     console.log("server is running on PORT" + PORT)
 })
-
-export default app;
